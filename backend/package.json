@@ -2,11 +2,11 @@
   "name": "inventory-mis-backend",
   "version": "1.0.0",
   "description": "Inventory and MIS Management Backend",
-  "main": "src/server.ts",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-   "start": "node dist/server.js",
+    "start": "node dist/server.js",
     "seed": "tsx src/seeds/seed.ts"
   },
   "dependencies": {

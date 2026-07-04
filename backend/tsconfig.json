@@ -12,7 +12,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "types": ["node", "express"]
   },
   "include": ["src/**/*"]
 }
