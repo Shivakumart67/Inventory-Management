@@ -1,0 +1,43 @@
+# =========================
+# Frontend
+# =========================
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.env
+/frontend/.env.*
+
+# =========================
+# Backend
+# =========================
+/backend/node_modules/
+/backend/dist/
+/backend/build/
+/backend/.env
+/backend/.env.*
+/backend/uploads/
+/backend/tmp/
+/backend/temp/
+
+# =========================
+# Common logs
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =========================
+# Editor / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# =========================
+# Cache
+# =========================
+.eslintcache
+.cache/
+.parcel-cache/
