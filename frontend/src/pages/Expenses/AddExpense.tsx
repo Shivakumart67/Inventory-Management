@@ -278,7 +278,21 @@ export const AddExpense: React.FC = () => {
         onClose={() => setSuccessToast(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" variant="filled" sx={{ width: '100%' }}>
+        <Alert
+          severity="success"
+          variant="filled"
+          sx={{
+            width: '100%',
+            maxWidth: { xs: '90vw', sm: 400 },
+            '& .MuiAlert-message': {
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              fontSize: '0.875rem'
+            },
+            boxShadow: 4,
+            borderRadius: 2
+          }}
+        >
           Expense entry successfully saved! Redirecting...
         </Alert>
       </Snackbar>

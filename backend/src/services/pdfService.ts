@@ -20,10 +20,10 @@ export class PDFService {
     doc.pipe(res);
 
     // Set headers
-    const title = type === 'PURCHASE' ? 'PURCHASE ENTRY (INWARD)' :
+    const title = type === 'PURCHASE' ? 'EGG COLLECTION VOUCHER' :
                   type === 'SALE' ? 'SALES INVOICE (OUTWARD)' : 'EXPENSE VOUCHER';
     
-    const refLabel = type === 'PURCHASE' ? 'Purchase Ref:' :
+    const refLabel = type === 'PURCHASE' ? 'Collection Ref:' :
                      type === 'SALE' ? 'Invoice No:' : 'Voucher No:';
 
     const refNo = type === 'PURCHASE' ? data.referenceNumber :
@@ -46,9 +46,9 @@ export class PDFService {
     // 2. Transaction Information Block
     doc.fontSize(10).fillColor('#4b5563');
     doc.text(`${refLabel} ${refNo}`, 50, 135);
-    doc.text(`Date: ${dayjs(date).format('YYYY-MM-DD')}`, 50, 150);
+    doc.text(`Date: ${dayjs(date).format('DD MM YYYY HH:mm:ss')}`, 50, 150);
     doc.text(`Created By: ${creatorName}`, 50, 165);
-    doc.text(`Created At: ${dayjs(data.createdAt).format('YYYY-MM-DD HH:mm:ss')}`, 50, 180);
+    doc.text(`Created At: ${dayjs(data.createdAt).format('DD MM YYYY HH:mm:ss')}`, 50, 180);
 
     // Party Details (Supplier / Buyer / Expense details)
     let partyLabel = '';
@@ -56,9 +56,9 @@ export class PDFService {
     let partyMobile = '';
 
     if (type === 'PURCHASE') {
-      partyLabel = 'Supplier Details:';
-      partyName = data.supplierName;
-      partyMobile = data.supplierMobile || 'N/A';
+      partyLabel = 'Egg Collection Source:';
+      partyName = companyName; 
+      partyMobile = '';
     } else if (type === 'SALE') {
       partyLabel = 'Buyer Details:';
       partyName = data.buyerName;
@@ -73,7 +73,7 @@ export class PDFService {
     doc.fillColor('#4b5563').fontSize(10).text(`Name: ${partyName}`, 350, 150);
     if (type === 'EXPENSE') {
       doc.text(partyMobile, 350, 165); // Displays reference details
-    } else {
+    } else if (type === 'SALE') {
       doc.text(`Mobile: ${partyMobile}`, 350, 165);
     }
 
@@ -107,11 +107,11 @@ export class PDFService {
       doc.text(data.subcategory || 'N/A', 380, 275, { width: 90 });
       doc.text(`${data.amount.toFixed(2)}`, 480, 275, { align: 'right', width: 55 });
     } else {
-      const quantityText = `${data.quantity} ${data.unitType || 'Units'}`;
+      const quantityText = `${data.quantity} Eggs`;
       const rateLabel = type === 'PURCHASE' ? data.ratePerUnit : data.unitSellingRate;
       const totalAmount = type === 'PURCHASE' ? data.totalAmount : data.totalSaleAmount;
 
-      doc.text(type === 'PURCHASE' ? 'Purchase Inward Stock' : 'Sales Outward Stock', 60, 275, { width: 160 });
+      doc.text(type === 'PURCHASE' ? 'Egg Collection Inward' : 'Sales Outward Eggs', 60, 275, { width: 160 });
       doc.text(quantityText, 230, 275, { align: 'right', width: 60 });
       doc.text(`${rateLabel.toFixed(2)}`, 310, 275, { align: 'right', width: 80 });
       doc.text(`${totalAmount.toFixed(2)}`, 440, 275, { align: 'right', width: 95 });

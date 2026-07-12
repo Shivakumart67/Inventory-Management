@@ -143,10 +143,10 @@ export const ReportsDashboard: React.FC = () => {
       return (
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6}>
-            <SummaryTile title="Purchased Quantity" value={`${summary.totalQuantity} Units`} color="primary" />
+            <SummaryTile title="Collected Eggs Quantity" value={`${summary.totalQuantity}`} color="primary" />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <SummaryTile title="Total Inward Cost" value={`${currencySymbol}${summary.totalAmount?.toFixed(2)}`} color="info" />
+            <SummaryTile title="Total Collection Value" value={`${currencySymbol}${summary.totalAmount?.toFixed(2)}`} color="info" />
           </Grid>
         </Grid>
       );
@@ -220,19 +220,19 @@ export const ReportsDashboard: React.FC = () => {
               <Typography variant="h6" sx={{ fontWeight: 700 }}>Query Builder & Reports</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                select
-                size="small"
-                label="Select Report Module"
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-              >
-                <MenuItem value="purchases">Purchase Report (Stock Inward)</MenuItem>
-                <MenuItem value="sales">Sales Report (Stock Outward)</MenuItem>
-                <MenuItem value="expenses">Expense Report</MenuItem>
-                <MenuItem value="stock">Stock Movement Ledger</MenuItem>
-              </TextField>
+                <TextField
+                  fullWidth
+                  select
+                  size="small"
+                  label="Select Report Module"
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                >
+                  <MenuItem value="purchases">Egg Collection Report (Stock Inward)</MenuItem>
+                  <MenuItem value="sales">Sales Report (Stock Outward)</MenuItem>
+                  <MenuItem value="expenses">Expense Report</MenuItem>
+                  <MenuItem value="stock">Stock Movement Ledger</MenuItem>
+                </TextField>
             </Grid>
           </Grid>
         </CardContent>
@@ -267,17 +267,7 @@ export const ReportsDashboard: React.FC = () => {
               </Grid>
 
               {/* Purchase Specific Filters */}
-              {reportType === 'purchases' && (
-                <Grid item xs={12} sm={12} md={6}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Supplier Name"
-                    value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
-                  />
-                </Grid>
-              )}
+              {reportType === 'purchases' && null}
 
               {/* Sales Specific Filters */}
               {reportType === 'sales' && (
@@ -389,10 +379,9 @@ export const ReportsDashboard: React.FC = () => {
                 <>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Date</TableCell>
+                      <TableCell>Collection Date</TableCell>
                       <TableCell>Ref Number</TableCell>
-                      <TableCell>Supplier</TableCell>
-                      <TableCell align="right">Qty</TableCell>
+                      <TableCell align="right">Qty (Eggs)</TableCell>
                       <TableCell align="right">Rate</TableCell>
                       <TableCell align="right">Net Total</TableCell>
                       <TableCell>Manager</TableCell>
@@ -402,17 +391,16 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.purchaseDate).format('YYYY-MM-DD')}</TableCell>
+                          <TableCell>{dayjs(item.purchaseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.referenceNumber}</TableCell>
-                          <TableCell>{item.supplierName}</TableCell>
-                          <TableCell align="right">{item.quantity} {item.unitType}</TableCell>
+                          <TableCell align="right">{item.quantity}</TableCell>
                           <TableCell align="right">{currencySymbol}{item.ratePerUnit?.toFixed(2)}</TableCell>
                           <TableCell align="right" sx={{ fontWeight: 600 }}>{currencySymbol}{item.totalAmount?.toFixed(2)}</TableCell>
                           <TableCell>{item.createdBy?.name || 'System'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
-                      <TableRow><TableCell colSpan={7} align="center">No purchase entries matching criteria</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={6} align="center">No collection entries matching criteria</TableCell></TableRow>
                     )}
                   </TableBody>
                 </>
@@ -436,10 +424,10 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.salesDate).format('YYYY-MM-DD')}</TableCell>
+                          <TableCell>{dayjs(item.salesDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.invoiceNumber}</TableCell>
                           <TableCell>{item.buyerName}</TableCell>
-                          <TableCell align="right">{item.quantity} Units</TableCell>
+                          <TableCell align="right">{item.quantity}</TableCell>
                           <TableCell align="right">{currencySymbol}{item.unitSellingRate?.toFixed(2)}</TableCell>
                           <TableCell align="right" sx={{ fontWeight: 600 }}>{currencySymbol}{item.totalSaleAmount?.toFixed(2)}</TableCell>
                           <TableCell>{item.createdBy?.name || 'System'}</TableCell>
@@ -471,7 +459,7 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.expenseDate).format('YYYY-MM-DD')}</TableCell>
+                          <TableCell>{dayjs(item.expenseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.voucherNumber}</TableCell>
                           <TableCell>{item.spentFor}</TableCell>
                           <TableCell>{item.category}</TableCell>
@@ -509,10 +497,10 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.ledgerItems?.length > 0 ? (
                       reportData.ledgerItems.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.date).format('YYYY-MM-DD')}</TableCell>
+                          <TableCell>{dayjs(item.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
                           <TableCell>
                             <Chip
-                              label={item.entryType}
+                              label={item.entryType === 'PURCHASE' ? 'COLLECTION' : item.entryType}
                               size="small"
                               color={
                                 item.entryType === 'PURCHASE' ? 'info' :
@@ -529,7 +517,7 @@ export const ReportsDashboard: React.FC = () => {
                             {item.outQuantity > 0 ? `-${item.outQuantity}` : '-'}
                           </TableCell>
                           <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                            {item.closingStock} Units
+                            {item.closingStock}
                           </TableCell>
                           <TableCell>{item.notes}</TableCell>
                           <TableCell>{item.createdBy?.name || 'System'}</TableCell>
@@ -553,14 +541,13 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.referenceNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.purchaseDate).format('YYYY-MM-DD')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.purchaseDate).format('DD MM YYYY HH:mm:ss')}</Typography>
                   </Box>
-                  <Typography variant="body2">Supplier: {item.supplierName}</Typography>
-                  <Typography variant="body2" color="text.secondary">Qty: {item.quantity} {item.unitType} @ {currencySymbol}{item.ratePerUnit?.toFixed(2)}</Typography>
+                  <Typography variant="body2" color="text.secondary">Qty: {item.quantity} @ {currencySymbol}{item.ratePerUnit?.toFixed(2)}</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>Total: {currencySymbol}{item.totalAmount?.toFixed(2)}</Typography>
                 </CardContent>
               </Card>
-            )) : <Card sx={{ p: 3, textAlign: 'center' }}><Typography color="text.secondary">No purchase entries matching criteria</Typography></Card>
+            )) : <Card sx={{ p: 3, textAlign: 'center' }}><Typography color="text.secondary">No collection entries matching criteria</Typography></Card>
           )}
 
           {reportType === 'sales' && (
@@ -569,10 +556,10 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.invoiceNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.salesDate).format('YYYY-MM-DD')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.salesDate).format('DD MM YYYY HH:mm:ss')}</Typography>
                   </Box>
                   <Typography variant="body2">Buyer: {item.buyerName}</Typography>
-                  <Typography variant="body2" color="text.secondary">Qty: {item.quantity} Units @ {currencySymbol}{item.unitSellingRate?.toFixed(2)}</Typography>
+                  <Typography variant="body2" color="text.secondary">Qty: {item.quantity} @ {currencySymbol}{item.unitSellingRate?.toFixed(2)}</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>Total: {currencySymbol}{item.totalSaleAmount?.toFixed(2)}</Typography>
                 </CardContent>
               </Card>
@@ -585,7 +572,7 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.voucherNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.expenseDate).format('YYYY-MM-DD')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.expenseDate).format('DD MM YYYY HH:mm:ss')}</Typography>
                   </Box>
                   <Typography variant="body2">{item.spentFor}</Typography>
                   <Typography variant="body2" color="text.secondary">{item.category}{item.subcategory ? ` / ${item.subcategory}` : ''}</Typography>
@@ -601,18 +588,18 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                     <Chip
-                      label={item.entryType}
+                      label={item.entryType === 'PURCHASE' ? 'COLLECTION' : item.entryType}
                       size="small"
                       color={item.entryType === 'PURCHASE' ? 'info' : item.entryType === 'SALE' ? 'success' : 'default'}
                       sx={{ fontSize: '0.65rem', fontWeight: 700 }}
                     />
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.date).format('YYYY-MM-DD')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.date).format('DD MM YYYY HH:mm:ss')}</Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.referenceNumber}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     In: {item.inQuantity > 0 ? `+${item.inQuantity}` : '-'} &nbsp;|&nbsp; Out: {item.outQuantity > 0 ? `-${item.outQuantity}` : '-'}
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main', mt: 0.5 }}>Closing: {item.closingStock} Units</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main', mt: 0.5 }}>Closing: {item.closingStock}</Typography>
                 </CardContent>
               </Card>
             )) : <Card sx={{ p: 3, textAlign: 'center' }}><Typography color="text.secondary">No stock ledger logs matching criteria</Typography></Card>

@@ -82,22 +82,22 @@ export const StockSummary: React.FC = () => {
   const summaryCards = [
     {
       title: 'Current Available Stock',
-      value: `${currentStock} Units`,
+      value: `${currentStock} Eggs`,
       subtitle: 'Net physical stock in storage',
       icon: <StockIcon />,
       color: isLowStock ? 'error' : 'primary',
     },
     {
       title: 'Total Inward Quantity',
-      value: `${summary?.totalInwardQuantity || 0} Units`,
-      subtitle: 'Cumulative purchase stock received',
+      value: `${summary?.totalInwardQuantity || 0} Eggs`,
+      subtitle: 'Cumulative collection stock received',
       icon: <InwardIcon />,
       color: 'info',
     },
     {
       title: 'Total Outward Quantity',
-      value: `${summary?.totalOutwardQuantity || 0} Units`,
-      subtitle: 'Cumulative sales stock dispatched',
+      value: `${summary?.totalOutwardQuantity || 0} Eggs`,
+      subtitle: 'Cumulative sales eggs dispatched',
       icon: <OutwardIcon />,
       color: 'success',
     },
@@ -111,7 +111,7 @@ export const StockSummary: React.FC = () => {
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
             Low Stock Warning Level
           </Typography>
-          Current available stock is {currentStock} units (below the 50 units threshold). Consider submitting purchase inward entries to maintain operations.
+          Current available stock is {currentStock} eggs (below the 50 eggs threshold). Consider submitting egg collection inward entries to maintain operations.
         </Alert>
       )}
 
@@ -180,7 +180,7 @@ export const StockSummary: React.FC = () => {
                   <YAxis stroke="#94a3b8" style={{ fontSize: '0.8rem' }} />
                   <Tooltip
                     formatter={(value: any, _name: any, props: any) => [
-                      `${value} Units`,
+                      `${value} Eggs`,
                       `Closing Stock (Ref: ${props.payload.referenceNumber})`,
                     ]}
                   />

@@ -195,7 +195,7 @@ export const AdminDashboard: React.FC = () => {
   const transactionTrend =
     trends?.purchaseTrend.map((p, index) => ({
       date: p.date,
-      Purchases: p.quantity,
+      Collections: p.quantity,
       Sales: trends.salesTrend[index]?.quantity || 0,
     })) || [];
 
@@ -214,7 +214,7 @@ export const AdminDashboard: React.FC = () => {
         <Grid item xs={6} md={3}>
           <StatCard
             title="Available Stock"
-            value={`${stats.currentStock} Units`}
+            value={`${stats.currentStock} Eggs`}
             subtitle="Current active inventory balance"
             icon={<StockIcon />}
             color="primary"
@@ -223,8 +223,8 @@ export const AdminDashboard: React.FC = () => {
         </Grid>
         <Grid item xs={6} md={3}>
           <StatCard
-            title="Today Purchases"
-            value={`${stats.todayPurchasesQty} Units`}
+            title="Today Collections"
+            value={`${stats.todayPurchasesQty} Eggs`}
             subtitle={`Monthly Sum: ${formatCurrency(stats.thisMonthPurchaseTotal, currencySymbol)}`}
             icon={<PurchaseIcon />}
             color="info"
@@ -234,7 +234,7 @@ export const AdminDashboard: React.FC = () => {
         <Grid item xs={6} md={3}>
           <StatCard
             title="Today Sales"
-            value={`${stats.todaySalesQty} Units`}
+            value={`${stats.todaySalesQty} Eggs`}
             subtitle={`Monthly Sum: ${formatCurrency(stats.thisMonthSalesTotal, currencySymbol)}`}
             icon={<SalesIcon />}
             color="success"
@@ -330,8 +330,8 @@ export const AdminDashboard: React.FC = () => {
                     <YAxis stroke="#94a3b8" style={{ fontSize: '0.75rem' }} width={35} />
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                    <Line type="monotone" dataKey="Purchases" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="Sales" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="Collections" name="Egg Collections" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="Sales" name="Sales" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </Box>
@@ -432,9 +432,9 @@ export const AdminDashboard: React.FC = () => {
                     <YAxis stroke="#94a3b8" style={{ fontSize: '0.75rem' }} width={40} />
                     <Tooltip formatter={(value: number) => formatCurrency(value, currencySymbol)} />
                     <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                    <Bar dataKey="purchases" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="sales" fill="#0f766e" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar name="Egg Collections" dataKey="purchases" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                    <Bar name="Sales" dataKey="sales" fill="#0f766e" radius={[4, 4, 0, 0]} />
+                    <Bar name="Expenses" dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>

@@ -3,10 +3,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IPurchase extends Document {
   purchaseDate: Date;
   referenceNumber: string;
-  supplierName: string;
+  supplierName?: string;
   supplierMobile?: string;
   quantity: number;
-  unitType: string;
+  unitType?: string;
   ratePerUnit: number;
   totalAmount: number;
   notes?: string;
@@ -20,10 +20,10 @@ const PurchaseSchema: Schema = new Schema(
   {
     purchaseDate: { type: Date, required: true },
     referenceNumber: { type: String, required: true, unique: true, index: true },
-    supplierName: { type: String, required: true },
-    supplierMobile: { type: String },
+    supplierName: { type: String, default: 'Egg Collection', required: false },
+    supplierMobile: { type: String, default: '' },
     quantity: { type: Number, required: true, min: 0.01 },
-    unitType: { type: String, default: 'Units', required: true },
+    unitType: { type: String, default: 'Units', required: false },
     ratePerUnit: { type: Number, required: true, min: 0 },
     totalAmount: { type: Number, required: true },
     notes: { type: String },

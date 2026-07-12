@@ -21,11 +21,8 @@ import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 
 const purchaseSchema = z.object({
-  purchaseDate: z.string().min(1, 'Purchase date is required'),
-  supplierName: z.string().min(2, 'Supplier name must be at least 2 characters'),
-  supplierMobile: z.string().optional(),
+  purchaseDate: z.string().min(1, 'Collection date is required'),
   quantity: z.coerce.number().min(0.01, 'Quantity must be greater than 0'),
-  unitType: z.string().default('Units'),
   ratePerUnit: z.coerce.number().min(0, 'Rate cannot be negative'),
   totalAmount: z.coerce.number().optional(),
   notes: z.string().optional(),
@@ -52,10 +49,7 @@ export const AddPurchase: React.FC = () => {
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
       purchaseDate: dayjs().format('YYYY-MM-DD'),
-      supplierName: '',
-      supplierMobile: '',
       quantity: 0,
-      unitType: 'Units',
       ratePerUnit: 0,
       totalAmount: 0,
       notes: '',
@@ -98,7 +92,7 @@ export const AddPurchase: React.FC = () => {
           Back
         </Button>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          New Purchase (Inward Stock Entry)
+          New Egg Collection (Inward Stock Entry)
         </Typography>
       </Box>
 
@@ -112,46 +106,16 @@ export const AddPurchase: React.FC = () => {
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={3}>
-              {/* Date & Vendor info */}
-              <Grid item xs={12} sm={6}>
+              {/* Date Info */}
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   type="date"
-                  label="Purchase Date"
+                  label="Collection Date"
                   {...register('purchaseDate')}
                   error={!!errors.purchaseDate}
                   helperText={errors.purchaseDate?.message}
                   InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Supplier Name"
-                  placeholder="e.g. Acme Corporation"
-                  {...register('supplierName')}
-                  error={!!errors.supplierName}
-                  helperText={errors.supplierName?.message}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Supplier Mobile Number (Optional)"
-                  placeholder="e.g. 9876543210"
-                  {...register('supplierMobile')}
-                  error={!!errors.supplierMobile}
-                  helperText={errors.supplierMobile?.message}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Unit Type"
-                  placeholder="e.g. Units, Kilograms, Litres"
-                  {...register('unitType')}
-                  error={!!errors.unitType}
-                  helperText={errors.unitType?.message}
                 />
               </Grid>
 
@@ -161,7 +125,7 @@ export const AddPurchase: React.FC = () => {
                   fullWidth
                   type="number"
                   inputProps={{ step: 'any' }}
-                  label="Quantity Purchased"
+                  label="Quantity Collected (Eggs)"
                   {...register('quantity')}
                   error={!!errors.quantity}
                   helperText={errors.quantity?.message}
@@ -172,7 +136,7 @@ export const AddPurchase: React.FC = () => {
                   fullWidth
                   type="number"
                   inputProps={{ step: 'any' }}
-                  label={`Rate Per Unit (${currencySymbol})`}
+                  label={`Rate Per Egg (${currencySymbol})`}
                   {...register('ratePerUnit')}
                   error={!!errors.ratePerUnit}
                   helperText={errors.ratePerUnit?.message}
@@ -195,7 +159,7 @@ export const AddPurchase: React.FC = () => {
                   multiline
                   rows={3}
                   label="Notes / Remarks"
-                  placeholder="e.g. Delivery terms, reference bill numbers, etc."
+                  placeholder="e.g. Broke details, collection point tags, etc."
                   {...register('notes')}
                 />
               </Grid>
@@ -210,7 +174,7 @@ export const AddPurchase: React.FC = () => {
                   disabled={submitting}
                   startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 >
-                  {submitting ? 'Registering Purchase...' : 'Save Purchase Entry'}
+                  {submitting ? 'Registering Collection...' : 'Save Collection Entry'}
                 </Button>
               </Grid>
             </Grid>
@@ -225,8 +189,22 @@ export const AddPurchase: React.FC = () => {
         onClose={() => setSuccessToast(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" variant="filled" sx={{ width: '100%' }}>
-          Purchase entry successfully saved! Redirecting...
+        <Alert
+          severity="success"
+          variant="filled"
+          sx={{
+            width: '100%',
+            maxWidth: { xs: '90vw', sm: 400 },
+            '& .MuiAlert-message': {
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              fontSize: '0.875rem'
+            },
+            boxShadow: 4,
+            borderRadius: 2
+          }}
+        >
+          Egg collection successfully saved! Redirecting...
         </Alert>
       </Snackbar>
     </Box>

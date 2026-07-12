@@ -32,6 +32,8 @@ import { StockLedger } from './pages/Stock/StockLedger';
 
 // Reporting
 import { ReportsDashboard } from './pages/Reports/ReportsDashboard';
+import { MISDashboard } from './pages/Reports/MISDashboard';
+import { GlobalLoader } from './components/GlobalLoader';
 
 // Admin Panel
 import { UserManagement } from './pages/Users/UserManagement';
@@ -42,6 +44,7 @@ export const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <AuthProvider>
         <SiteConfigProvider>
+          <GlobalLoader />
           <Router>
             <Routes>
               {/* Unauthenticated Login page */}
@@ -114,6 +117,16 @@ export const App: React.FC = () => {
                   <Protected allowedRoles={['ADMIN']}>
                     <AppLayout>
                       <ReportsDashboard />
+                    </AppLayout>
+                  </Protected>
+                }
+              />
+              <Route
+                path="/admin/mis-dashboard"
+                element={
+                  <Protected allowedRoles={['ADMIN']}>
+                    <AppLayout>
+                      <MISDashboard />
                     </AppLayout>
                   </Protected>
                 }
@@ -216,6 +229,16 @@ export const App: React.FC = () => {
                   <Protected allowedRoles={['MANAGER']}>
                     <AppLayout>
                       <ReportsDashboard />
+                    </AppLayout>
+                  </Protected>
+                }
+              />
+              <Route
+                path="/manager/mis-dashboard"
+                element={
+                  <Protected allowedRoles={['MANAGER']}>
+                    <AppLayout>
+                      <MISDashboard />
                     </AppLayout>
                   </Protected>
                 }

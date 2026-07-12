@@ -94,7 +94,7 @@ export const StockLedger: React.FC = () => {
                   onChange={(e) => setEntryType(e.target.value)}
                 >
                   <MenuItem value="">All Movements</MenuItem>
-                  <MenuItem value="PURCHASE">PURCHASE (Inward)</MenuItem>
+                  <MenuItem value="PURCHASE">EGG COLLECTION (Inward)</MenuItem>
                   <MenuItem value="SALE">SALE (Outward)</MenuItem>
                   <MenuItem value="ADJUSTMENT">ADJUSTMENT</MenuItem>
                 </TextField>
@@ -165,10 +165,10 @@ export const StockLedger: React.FC = () => {
               <TableBody>
                 {ledger.map((l) => (
                   <TableRow key={l._id} hover>
-                    <TableCell>{dayjs(l.date).format('YYYY-MM-DD')}</TableCell>
+                    <TableCell>{dayjs(l.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
                     <TableCell>
                       <Chip
-                        label={l.entryType}
+                        label={l.entryType === 'PURCHASE' ? 'COLLECTION' : l.entryType}
                         size="small"
                         color={
                           l.entryType === 'PURCHASE' ? 'info' :
@@ -185,7 +185,7 @@ export const StockLedger: React.FC = () => {
                       {l.outQuantity > 0 ? `-${l.outQuantity}` : '-'}
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                      {l.closingStock} Units
+                      {l.closingStock}
                     </TableCell>
                     <TableCell>{l.createdBy?.name || 'System'}</TableCell>
                     <TableCell color="text.secondary">{l.notes}</TableCell>
@@ -202,10 +202,10 @@ export const StockLedger: React.FC = () => {
                 <CardContent sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {dayjs(l.date).format('YYYY-MM-DD')}
+                      {dayjs(l.date).format('DD MM YYYY HH:mm:ss')}
                     </Typography>
                     <Chip
-                      label={l.entryType}
+                      label={l.entryType === 'PURCHASE' ? 'COLLECTION' : l.entryType}
                       size="small"
                       color={
                         l.entryType === 'PURCHASE' ? 'info' :
@@ -237,7 +237,7 @@ export const StockLedger: React.FC = () => {
                     <Grid item xs={4}>
                       <Typography variant="caption" color="text.secondary">Closing Stock</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                        {l.closingStock} Units
+                        {l.closingStock}
                       </Typography>
                     </Grid>
                   </Grid>

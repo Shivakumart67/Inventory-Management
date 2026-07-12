@@ -17,7 +17,7 @@ export class ExportService {
 
     // Style the title row
     worksheet.addRow([`Report: ${reportName.toUpperCase()}`]);
-    worksheet.addRow([`Generated on: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`]);
+    worksheet.addRow([`Generated on: ${dayjs().format('DD MM YYYY HH:mm:ss')}`]);
     worksheet.addRow([]); // empty spacing row
 
     // Add Headers row

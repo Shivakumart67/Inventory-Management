@@ -35,7 +35,8 @@ import {
   getAdminExpenseBreakdown,
   getManagerStats,
   getManagerTrends,
-  getManagerRecentEntries
+  getManagerRecentEntries,
+  getMISDashboardData
 } from '../controllers/dashboardController';
 import {
   getPurchaseReport,
@@ -113,6 +114,7 @@ router.get('/dashboard/admin/expense-breakdown', authenticateJWT as any, authori
 router.get('/dashboard/manager/stats', authenticateJWT as any, authorizeRoles('MANAGER') as any, getManagerStats as any);
 router.get('/dashboard/manager/trends', authenticateJWT as any, authorizeRoles('MANAGER') as any, getManagerTrends as any);
 router.get('/dashboard/manager/recent-entries', authenticateJWT as any, authorizeRoles('MANAGER') as any, getManagerRecentEntries as any);
+router.get('/dashboard/mis', authenticateJWT as any, getMISDashboardData as any);
 
 // ==========================================
 // REPORT & EXPORT ROUTE GROUPS

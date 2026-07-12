@@ -186,7 +186,7 @@ export const ManagerDashboard: React.FC = () => {
         <Grid item xs={6} md={3}>
           <StatCard
             title="Available Stock"
-            value={`${stats.currentStock} Units`}
+            value={`${stats.currentStock} Eggs`}
             label="Global stock level tracker"
             icon={<StockIcon />}
             color="primary"
@@ -194,9 +194,9 @@ export const ManagerDashboard: React.FC = () => {
         </Grid>
         <Grid item xs={6} md={3}>
           <StatCard
-            title="My Purchases (Today)"
+            title="My Collections (Today)"
             value={formatCurrency(stats.todayPurchaseTotal, currencySymbol)}
-            label="Inward cost submitted today"
+            label="Inward value registered today"
             icon={<PurchaseIcon />}
             color="info"
           />
@@ -236,9 +236,9 @@ export const ManagerDashboard: React.FC = () => {
           >
             <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, textAlign: 'center' }}>
               <AddIcon sx={{ fontSize: 40, mb: 1, color: 'white' }} />
-              <Typography variant="h6" sx={{ fontWeight: 700, color: 'white' }}>Add Purchase Entry</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: 'white' }}>Add Egg Collection</Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                Add stock inward purchases
+                Add stock inward collection
               </Typography>
             </CardContent>
           </Card>
@@ -302,7 +302,7 @@ export const ManagerDashboard: React.FC = () => {
                   <YAxis stroke="#94a3b8" style={{ fontSize: '0.75rem' }} width={35} />
                   <Tooltip formatter={(value: number) => formatCurrency(value, currencySymbol)} />
                   <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                  <Line type="monotone" dataKey="purchases" name="Purchases" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="purchases" name="Egg Collections" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="sales" name="Sales" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
@@ -339,10 +339,10 @@ export const ManagerDashboard: React.FC = () => {
                     {recentEntries.length > 0 ? (
                       recentEntries.map((entry) => (
                         <TableRow key={`${entry.type}-${entry.id}`} hover>
-                          <TableCell>{dayjs(entry.date).format('YYYY-MM-DD')}</TableCell>
+                          <TableCell>{dayjs(entry.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
                           <TableCell>
                             <Chip
-                              label={entry.type}
+                              label={entry.type === 'PURCHASE' ? 'COLLECTION' : entry.type}
                               size="small"
                               color={
                                 entry.type === 'PURCHASE' ? 'info' :
@@ -383,7 +383,7 @@ export const ManagerDashboard: React.FC = () => {
                       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                           <Chip
-                            label={entry.type}
+                            label={entry.type === 'PURCHASE' ? 'COLLECTION' : entry.type}
                             size="small"
                             color={
                               entry.type === 'PURCHASE' ? 'info' :
@@ -392,7 +392,7 @@ export const ManagerDashboard: React.FC = () => {
                             sx={{ fontSize: '0.7rem', fontWeight: 700 }}
                           />
                           <Typography variant="caption" color="text.secondary">
-                            {dayjs(entry.date).format('YYYY-MM-DD')}
+                            {dayjs(entry.date).format('DD MM YYYY HH:mm:ss')}
                           </Typography>
                         </Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>{entry.ref}</Typography>

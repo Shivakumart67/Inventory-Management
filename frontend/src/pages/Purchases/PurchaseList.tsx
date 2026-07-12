@@ -43,7 +43,6 @@ export const PurchaseList: React.FC = () => {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [search, setSearch] = useState('');
-  const [supplier, setSupplier] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
@@ -57,7 +56,6 @@ export const PurchaseList: React.FC = () => {
       const response = await api.get('/purchases', {
         params: {
           search,
-          supplier,
           fromDate,
           toDate,
           page,
@@ -87,7 +85,6 @@ export const PurchaseList: React.FC = () => {
 
   const handleClearFilters = () => {
     setSearch('');
-    setSupplier('');
     setFromDate('');
     setToDate('');
     setPage(1);
@@ -121,7 +118,7 @@ export const PurchaseList: React.FC = () => {
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <form onSubmit={handleSearchSubmit}>
             <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
                   size="small"
@@ -133,16 +130,7 @@ export const PurchaseList: React.FC = () => {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Supplier Name"
-                  value={supplier}
-                  onChange={(e) => setSupplier(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
                   size="small"
@@ -153,7 +141,7 @@ export const PurchaseList: React.FC = () => {
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
                   size="small"
@@ -185,7 +173,7 @@ export const PurchaseList: React.FC = () => {
       ) : purchases.length === 0 ? (
         <Card sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary">
-            No purchase entries found.
+            No egg collection entries found.
           </Typography>
         </Card>
       ) : (
@@ -195,12 +183,11 @@ export const PurchaseList: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Date</TableCell>
+                  <TableCell>Collection Date</TableCell>
                   <TableCell>Reference No</TableCell>
-                  <TableCell>Supplier</TableCell>
-                  <TableCell>Quantity</TableCell>
+                  <TableCell>Quantity (Eggs)</TableCell>
                   <TableCell>Rate</TableCell>
-                  <TableCell align="right">Total Amount</TableCell>
+                  <TableCell align="right">Total Value</TableCell>
                   <TableCell>Created By</TableCell>
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
@@ -213,10 +200,9 @@ export const PurchaseList: React.FC = () => {
                     sx={{ cursor: 'pointer' }}
                     onClick={() => handleRowClick(p)}
                   >
-                    <TableCell>{dayjs(p.purchaseDate).format('YYYY-MM-DD')}</TableCell>
+                    <TableCell>{dayjs(p.purchaseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>{p.referenceNumber}</TableCell>
-                    <TableCell>{p.supplierName}</TableCell>
-                    <TableCell>{p.quantity} {p.unitType}</TableCell>
+                    <TableCell>{p.quantity}</TableCell>
                     <TableCell>{formatCurrency(p.ratePerUnit, currencySymbol)}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600 }}>
                       {formatCurrency(p.totalAmount, currencySymbol)}
@@ -252,14 +238,11 @@ export const PurchaseList: React.FC = () => {
                       {p.referenceNumber}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {dayjs(p.purchaseDate).format('YYYY-MM-DD')}
+                      {dayjs(p.purchaseDate).format('DD MM YYYY HH:mm:ss')}
                     </Typography>
                   </Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                    Supplier: {p.supplierName}
-                  </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Quantity: {p.quantity} {p.unitType} | Rate: {formatCurrency(p.ratePerUnit, currencySymbol)}
+                    Quantity: {p.quantity} | Rate: {formatCurrency(p.ratePerUnit, currencySymbol)}
                   </Typography>
                   <Divider sx={{ mb: 1 }} />
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -301,46 +284,33 @@ export const PurchaseList: React.FC = () => {
         {selectedPurchase && (
           <>
             <DialogTitle sx={{ fontWeight: 700 }}>
-              Purchase Details: {selectedPurchase.referenceNumber}
+              Collection Details: {selectedPurchase.referenceNumber}
             </DialogTitle>
             <DialogContent dividers sx={{ p: 3 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="text.secondary">Purchase Date</Typography>
+                <Grid item xs={12}>
+                  <Typography variant="caption" color="text.secondary">Collection Date</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {dayjs(selectedPurchase.purchaseDate).format('YYYY-MM-DD')}
-                  </Typography>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="text.secondary">Supplier Name</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {selectedPurchase.supplierName}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="text.secondary">Supplier Mobile</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {selectedPurchase.supplierMobile || 'N/A'}
+                    {dayjs(selectedPurchase.purchaseDate).format('DD MM YYYY HH:mm:ss')}
                   </Typography>
                 </Grid>
 
                 <Grid item xs={12}><Divider /></Grid>
 
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Quantity</Typography>
+                  <Typography variant="caption" color="text.secondary">Quantity (Eggs)</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {selectedPurchase.quantity} {selectedPurchase.unitType}
+                    {selectedPurchase.quantity}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Rate Per Unit</Typography>
+                  <Typography variant="caption" color="text.secondary">Rate Per Egg</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
                     {formatCurrency(selectedPurchase.ratePerUnit, currencySymbol)}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Total Amount</Typography>
+                  <Typography variant="caption" color="text.secondary">Total Value</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 700, color: 'primary.main' }}>
                     {formatCurrency(selectedPurchase.totalAmount, currencySymbol)}
                   </Typography>
@@ -362,7 +332,7 @@ export const PurchaseList: React.FC = () => {
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary">Created By</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {selectedPurchase.createdBy?.name} (@{selectedPurchase.createdBy?.username}) at {dayjs(selectedPurchase.createdAt).format('YYYY-MM-DD HH:mm')}
+                    {selectedPurchase.createdBy?.name} (@{selectedPurchase.createdBy?.username}) at {dayjs(selectedPurchase.createdAt).format('DD MM YYYY HH:mm:ss')}
                   </Typography>
                 </Grid>
               </Grid>

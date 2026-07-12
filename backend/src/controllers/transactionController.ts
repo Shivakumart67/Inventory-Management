@@ -58,7 +58,7 @@ export const createPurchase = async (req: AuthRequest, res: Response, next: Next
     notes,
   } = req.body;
 
-  if (!purchaseDate || !supplierName || !quantity || !ratePerUnit) {
+  if (!purchaseDate || !quantity || !ratePerUnit) {
     return res.status(400).json({ success: false, message: 'All required fields must be supplied' });
   }
 
@@ -71,8 +71,8 @@ export const createPurchase = async (req: AuthRequest, res: Response, next: Next
     const purchase = new Purchase({
       purchaseDate,
       referenceNumber,
-      supplierName,
-      supplierMobile,
+      supplierName: supplierName || 'Egg Collection',
+      supplierMobile: supplierMobile || '',
       quantity,
       unitType: unitType || 'Units',
       ratePerUnit,
@@ -97,7 +97,7 @@ export const createPurchase = async (req: AuthRequest, res: Response, next: Next
     await ActivityService.log(
       req.user?._id as any,
       'PURCHASE_CREATE',
-      `Registered purchase ${referenceNumber} (₹${totalAmount.toFixed(2)}) from supplier ${supplierName}`,
+      `Registered collection ${referenceNumber} (₹${totalAmount.toFixed(2)})`,
       req.ip
     );
 
@@ -138,13 +138,14 @@ export const listPurchases = async (req: AuthRequest, res: Response, next: NextF
       ];
     }
 
-    const purchases = await Purchase.find(filter)
-      .populate('createdBy', 'name username role')
-      .sort({ purchaseDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(l);
-
-    const total = await Purchase.countDocuments(filter);
+    const [purchases, total] = await Promise.all([
+      Purchase.find(filter)
+        .populate('createdBy', 'name username role')
+        .sort({ purchaseDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(l),
+      Purchase.countDocuments(filter),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -290,13 +291,14 @@ export const listSales = async (req: AuthRequest, res: Response, next: NextFunct
       ];
     }
 
-    const sales = await Sale.find(filter)
-      .populate('createdBy', 'name username role')
-      .sort({ salesDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(l);
-
-    const total = await Sale.countDocuments(filter);
+    const [sales, total] = await Promise.all([
+      Sale.find(filter)
+        .populate('createdBy', 'name username role')
+        .sort({ salesDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(l),
+      Sale.countDocuments(filter),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -437,13 +439,14 @@ export const listExpenses = async (req: AuthRequest, res: Response, next: NextFu
       ];
     }
 
-    const expenses = await Expense.find(filter)
-      .populate('createdBy', 'name username role')
-      .sort({ expenseDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(l);
-
-    const total = await Expense.countDocuments(filter);
+    const [expenses, total] = await Promise.all([
+      Expense.find(filter)
+        .populate('createdBy', 'name username role')
+        .sort({ expenseDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(l),
+      Expense.countDocuments(filter),
+    ]);
 
     return res.status(200).json({
       success: true,

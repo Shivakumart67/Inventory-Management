@@ -202,19 +202,17 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
     let reportName = String(type);
 
     if (type === 'purchases') {
+      reportName = 'egg_collections';
       const dateQuery = buildDateQuery(fromDate as string, toDate as string);
       if (Object.keys(dateQuery).length > 0) filter.purchaseDate = dateQuery;
-      if (supplier) filter.supplierName = { $regex: supplier as string, $options: 'i' };
 
       const items = await Purchase.find(filter).populate('createdBy', 'name').sort({ purchaseDate: -1 });
 
-      headers = ['Ref Number', 'Date', 'Supplier', 'Quantity', 'Unit', 'Rate (₹)', 'Total (₹)', 'Created By'];
+      headers = ['Ref Number', 'Collection Date', 'Quantity (Eggs)', 'Rate (₹)', 'Total Value (₹)', 'Created By'];
       rows = items.map((p) => [
         p.referenceNumber,
-        dayjs(p.purchaseDate).format('YYYY-MM-DD'),
-        p.supplierName,
+        dayjs(p.purchaseDate).format('DD MM YYYY HH:mm:ss'),
         p.quantity,
-        p.unitType,
         p.ratePerUnit,
         p.totalAmount,
         (p.createdBy as any)?.name || 'System',
@@ -226,10 +224,10 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
 
       const items = await Sale.find(filter).populate('createdBy', 'name').sort({ salesDate: -1 });
 
-      headers = ['Invoice Number', 'Date', 'Buyer Name', 'Quantity', 'Rate (₹)', 'Total Sale (₹)', 'Created By'];
+      headers = ['Invoice Number', 'Date', 'Buyer Name', 'Quantity (Eggs)', 'Rate (₹)', 'Total Sale (₹)', 'Created By'];
       rows = items.map((s) => [
         s.invoiceNumber,
-        dayjs(s.salesDate).format('YYYY-MM-DD'),
+        dayjs(s.salesDate).format('DD MM YYYY HH:mm:ss'),
         s.buyerName,
         s.quantity,
         s.unitSellingRate,
@@ -246,7 +244,7 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
       headers = ['Voucher No', 'Date', 'Category', 'Subcategory', 'Amount (₹)', 'Title/Spent For', 'Bill Number', 'Created By'];
       rows = items.map((e) => [
         e.voucherNumber,
-        dayjs(e.expenseDate).format('YYYY-MM-DD'),
+        dayjs(e.expenseDate).format('DD MM YYYY HH:mm:ss'),
         e.category,
         e.subcategory || 'N/A',
         e.amount,
@@ -262,10 +260,10 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
 
       const items = await StockLedger.find(filter).populate('createdBy', 'name').sort({ date: -1 });
 
-      headers = ['Ledger Date', 'Entry Type', 'Reference No', 'In Quantity', 'Out Quantity', 'Closing Stock', 'Notes', 'Created By'];
+      headers = ['Ledger Date', 'Entry Type', 'Reference No', 'In Quantity', 'Out Quantity', 'Closing Stock (Eggs)', 'Notes', 'Created By'];
       rows = items.map((l) => [
-        dayjs(l.date).format('YYYY-MM-DD'),
-        l.entryType,
+        dayjs(l.date).format('DD MM YYYY HH:mm:ss'),
+        l.entryType === 'PURCHASE' ? 'COLLECTION' : l.entryType,
         l.referenceNumber,
         l.inQuantity,
         l.outQuantity,

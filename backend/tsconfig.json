@@ -14,8 +14,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "types": ["node", "express"],
-    "ignoreDeprecations": "6.0"
+    "types": ["node", "express"]
   },
   "include": ["src/**/*"]
 }

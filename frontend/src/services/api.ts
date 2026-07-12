@@ -9,9 +9,18 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach JWT Token if available
+let activeRequests = 0;
+
+function updateLoadingState(delta: number) {
+  activeRequests = Math.max(0, activeRequests + delta);
+  // Dispatch a global event that components (like GlobalLoader) can listen to
+  window.dispatchEvent(new CustomEvent('api-loading', { detail: { loading: activeRequests > 0 } }));
+}
+
+// Request Interceptor: Attach JWT Token if available and increment loading count
 api.interceptors.request.use(
   (config) => {
+    updateLoadingState(1);
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -19,14 +28,19 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    updateLoadingState(-1);
     return Promise.reject(error);
   }
 );
 
-// Response Interceptor: Redirect or logout on 401
+// Response Interceptor: Redirect or logout on 401, decrement loading count
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    updateLoadingState(-1);
+    return response;
+  },
   (error) => {
+    updateLoadingState(-1);
     if (error.response && error.response.status === 401) {
       // Clear token and alert user or refresh page
       localStorage.removeItem('token');

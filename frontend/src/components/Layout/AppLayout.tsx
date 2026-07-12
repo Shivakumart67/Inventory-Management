@@ -80,7 +80,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       roles: ['ADMIN'],
     },
     {
-      text: 'Purchases List',
+      text: 'MIS Dashboard',
+      path: '/admin/mis-dashboard',
+      icon: <AssessmentIcon />,
+      roles: ['ADMIN'],
+    },
+    {
+      text: 'Egg Collections',
       path: '/admin/purchases',
       icon: <ShoppingCartIcon />,
       roles: ['ADMIN'],
@@ -110,7 +116,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       roles: ['ADMIN'],
     },
     {
-      text: 'MIS Reports',
+      text: 'Export Reports',
       path: '/admin/reports',
       icon: <AssessmentIcon />,
       roles: ['ADMIN'],
@@ -136,7 +142,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       roles: ['MANAGER'],
     },
     {
-      text: 'Add Purchase',
+      text: 'MIS Dashboard',
+      path: '/manager/mis-dashboard',
+      icon: <AssessmentIcon />,
+      roles: ['MANAGER'],
+    },
+    {
+      text: 'Add Egg Collection',
       path: '/manager/add-purchase',
       icon: <AddBoxIcon />,
       roles: ['MANAGER'],
@@ -154,7 +166,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       roles: ['MANAGER'],
     },
     {
-      text: 'My Purchases',
+      text: 'My Egg Collections',
       path: '/manager/my-purchases',
       icon: <ShoppingCartIcon />,
       roles: ['MANAGER'],
@@ -172,7 +184,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       roles: ['MANAGER'],
     },
     {
-      text: 'My Reports',
+      text: 'Export Reports',
       path: '/manager/my-reports',
       icon: <AssessmentIcon />,
       roles: ['MANAGER'],

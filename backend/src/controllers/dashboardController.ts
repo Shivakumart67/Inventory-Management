@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 import User from '../models/User';
 import Purchase from '../models/Purchase';
@@ -350,6 +351,175 @@ export const getManagerRecentEntries = async (req: AuthRequest, res: Response, n
     const recentEntries = feed.slice(0, 5);
 
     return res.status(200).json({ success: true, recentEntries });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMISDashboardData = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { fromDate, toDate, creator } = req.query;
+
+    // Parse date filters or set defaults to last 30 days
+    const start = fromDate ? dayjs(fromDate as string).startOf('day') : dayjs().subtract(30, 'day').startOf('day');
+    const end = toDate ? dayjs(toDate as string).endOf('day') : dayjs().endOf('day');
+
+    const startDate = start.toDate();
+    const endDate = end.toDate();
+
+    // Determine matcher by role
+    let creatorFilter: any = {};
+    if (req.user?.role === 'MANAGER') {
+      creatorFilter = { createdBy: new mongoose.Types.ObjectId((req.user as any)._id) };
+    } else if (req.user?.role === 'ADMIN' && creator) {
+      creatorFilter = { createdBy: new mongoose.Types.ObjectId(creator as string) };
+    }
+
+    const purchaseMatch = { purchaseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+    const salesMatch = { salesDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+    const expenseMatch = { expenseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+
+    const diffDays = end.diff(start, 'day');
+    const isDaily = diffDays <= 31;
+    const format = isDaily ? '%Y-%m-%d' : '%Y-%m';
+
+    // Execute queries in parallel using Promise.all
+    const [
+      purchaseGroup,
+      salesGroup,
+      expenseGroup,
+      expenseCategories,
+      managersList
+    ] = await Promise.all([
+      Purchase.aggregate([
+        { $match: purchaseMatch },
+        {
+          $group: {
+            _id: { $dateToString: { format, date: '$purchaseDate' } },
+            totalQuantity: { $sum: '$quantity' },
+            totalCost: { $sum: '$totalAmount' }
+          }
+        }
+      ]),
+      Sale.aggregate([
+        { $match: salesMatch },
+        {
+          $group: {
+            _id: { $dateToString: { format, date: '$salesDate' } },
+            totalQuantity: { $sum: '$quantity' },
+            totalRevenue: { $sum: '$totalSaleAmount' }
+          }
+        }
+      ]),
+      Expense.aggregate([
+        { $match: expenseMatch },
+        {
+          $group: {
+            _id: { $dateToString: { format, date: '$expenseDate' } },
+            totalExpense: { $sum: '$amount' }
+          }
+        }
+      ]),
+      Expense.aggregate([
+        { $match: expenseMatch },
+        {
+          $group: {
+            _id: '$category',
+            totalAmount: { $sum: '$amount' }
+          }
+        },
+        { $sort: { totalAmount: -1 } }
+      ]),
+      req.user?.role === 'ADMIN' ? User.find({ role: 'MANAGER' }, 'name username') : Promise.resolve([])
+    ]);
+
+    // Merge groupings by date bucket
+    const bucketMap: Record<string, {
+      date: string;
+      inwardQty: number;
+      outwardQty: number;
+      cost: number;
+      revenue: number;
+      expenses: number;
+      profit: number;
+    }> = {};
+
+    purchaseGroup.forEach(g => {
+      const b = g._id;
+      if (b) {
+        if (!bucketMap[b]) {
+          bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+        }
+        bucketMap[b].inwardQty += g.totalQuantity || 0;
+        bucketMap[b].cost += g.totalCost || 0;
+      }
+    });
+
+    salesGroup.forEach(g => {
+      const b = g._id;
+      if (b) {
+        if (!bucketMap[b]) {
+          bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+        }
+        bucketMap[b].outwardQty += g.totalQuantity || 0;
+        bucketMap[b].revenue += g.totalRevenue || 0;
+      }
+    });
+
+    expenseGroup.forEach(g => {
+      const b = g._id;
+      if (b) {
+        if (!bucketMap[b]) {
+          bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+        }
+        bucketMap[b].expenses += g.totalExpense || 0;
+      }
+    });
+
+    // Populate profit
+    Object.keys(bucketMap).forEach(b => {
+      bucketMap[b].profit = bucketMap[b].revenue - bucketMap[b].cost - bucketMap[b].expenses;
+    });
+
+    // Sort ascending for chart flow, reverse copy for table grid view
+    const trendData = Object.values(bucketMap).sort((a, b) => a.date.localeCompare(b.date));
+    const pivotData = [...trendData].reverse();
+
+    // Summarize totals
+    let totalInwardQty = 0;
+    let totalInwardCost = 0;
+    let totalOutwardQty = 0;
+    let totalOutwardRevenue = 0;
+    let totalExpenses = 0;
+
+    Object.values(bucketMap).forEach(b => {
+      totalInwardQty += b.inwardQty;
+      totalInwardCost += b.cost;
+      totalOutwardQty += b.outwardQty;
+      totalOutwardRevenue += b.revenue;
+      totalExpenses += b.expenses;
+    });
+
+    const netProfit = totalOutwardRevenue - totalInwardCost - totalExpenses;
+
+    return res.status(200).json({
+      success: true,
+      kpis: {
+        totalInwardQty,
+        totalInwardCost,
+        totalOutwardQty,
+        totalOutwardRevenue,
+        totalExpenses,
+        netProfit
+      },
+      trendData,
+      pivotData,
+      expenseCategories: expenseCategories.map(ec => ({
+        name: ec._id || 'Uncategorized',
+        value: ec.totalAmount
+      })),
+      managers: managersList
+    });
   } catch (error) {
     next(error);
   }
