@@ -3,6 +3,7 @@ import { Box, Typography, Slide } from '@mui/material';
 import { Sync as SyncIcon } from '@mui/icons-material';
 
 const LOADING_QUOTES = [
+  "Loading...",
   "Getting things from server...",
   "Your data is loading...",
   "In a while it will resolve...",
@@ -35,7 +36,7 @@ export const GlobalLoader: React.FC = () => {
   useEffect(() => {
     if (loading) {
       // Pick a random starting quote
-      setQuoteIndex(Math.floor(Math.random() * LOADING_QUOTES.length));
+      setQuoteIndex(0);
       setAnimating(false);
 
       intervalRef.current = setInterval(() => {
