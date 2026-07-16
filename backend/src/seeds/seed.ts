@@ -97,11 +97,11 @@ async function seed() {
     const configExists = await SiteConfig.findOne();
     if (!configExists) {
       await new SiteConfig({
-        companyName: 'Shiva Farms',
+        companyName: 'Golden Egg Layer Farm',
         currency: 'INR',
         currencySymbol: '₹'
       }).save();
-      console.log('Site Config seeded with Shiva Farms.');
+      console.log('Site Config seeded with Golden Egg Layer Farm.');
     } else {
       console.log('Site Config already exists.');
     }

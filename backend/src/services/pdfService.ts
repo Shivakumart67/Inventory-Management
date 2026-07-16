@@ -4,25 +4,21 @@ import dayjs from 'dayjs';
 import SiteConfig from '../models/SiteConfig';
 
 export class PDFService {
-  static async generateTransactionPDF(
+
+  /**
+   * Internal helper that builds the PDF document and returns it.
+   * Used by both the stream and base64 methods.
+   */
+  private static buildDocument(
     type: 'PURCHASE' | 'SALE' | 'EXPENSE',
     data: any,
-    res: Response
-  ): Promise<void> {
+    companyName: string
+  ): InstanceType<typeof PDFDocument> {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
-    // Fetch dynamic site config branding
-    const config = await SiteConfig.findOne();
-    const companyName = config?.companyName || 'Shiva Farms';
-    // const currencySymbol = config?.currencySymbol || '₹';
-
-    // Pipe the PDF document to the response stream
-    doc.pipe(res);
-
-    // Set headers
     const title = type === 'PURCHASE' ? 'EGG COLLECTION VOUCHER' :
                   type === 'SALE' ? 'SALES INVOICE (OUTWARD)' : 'EXPENSE VOUCHER';
-    
+
     const refLabel = type === 'PURCHASE' ? 'Collection Ref:' :
                      type === 'SALE' ? 'Invoice No:' : 'Voucher No:';
 
@@ -37,9 +33,9 @@ export class PDFService {
     // 1. Header Section
     doc.fillColor('#0f766e').fontSize(20).text(companyName.toUpperCase(), 50, 45);
     doc.fillColor('#4b5563').fontSize(10).text('Business Management System', 50, 68);
-    
+
     doc.fontSize(14).fillColor('#1f2937').text(title, 50, 100, { align: 'right' });
-    
+
     // Draw a divider line
     doc.moveTo(50, 120).lineTo(545, 120).strokeColor('#e5e7eb').stroke();
 
@@ -50,14 +46,14 @@ export class PDFService {
     doc.text(`Created By: ${creatorName}`, 50, 165);
     doc.text(`Created At: ${dayjs(data.createdAt).format('DD MM YYYY HH:mm:ss')}`, 50, 180);
 
-    // Party Details (Supplier / Buyer / Expense details)
+    // Party Details
     let partyLabel = '';
     let partyName = '';
     let partyMobile = '';
 
     if (type === 'PURCHASE') {
       partyLabel = 'Egg Collection Source:';
-      partyName = companyName; 
+      partyName = companyName;
       partyMobile = '';
     } else if (type === 'SALE') {
       partyLabel = 'Buyer Details:';
@@ -72,7 +68,7 @@ export class PDFService {
     doc.fillColor('#1f2937').fontSize(11).text(partyLabel, 350, 135);
     doc.fillColor('#4b5563').fontSize(10).text(`Name: ${partyName}`, 350, 150);
     if (type === 'EXPENSE') {
-      doc.text(partyMobile, 350, 165); // Displays reference details
+      doc.text(partyMobile, 350, 165);
     } else if (type === 'SALE') {
       doc.text(`Mobile: ${partyMobile}`, 350, 165);
     }
@@ -86,7 +82,7 @@ export class PDFService {
     // Table Header
     doc.rect(50, 240, 495, 20).fill('#f3f4f6');
     doc.fillColor('#374151').fontSize(10);
-    
+
     if (type === 'EXPENSE') {
       doc.text('Expense Title / Item', 60, 245);
       doc.text('Category', 250, 245);
@@ -124,7 +120,6 @@ export class PDFService {
     const startY = 325;
     if (type !== 'EXPENSE') {
       const totalAmount = type === 'PURCHASE' ? data.totalAmount : data.totalSaleAmount;
-
       doc.text(`Net Total:`, 350, startY + 20);
       doc.text(`${totalAmount.toFixed(2)}`, 450, startY + 20, { align: 'right', width: 85 });
     } else {
@@ -148,6 +143,70 @@ export class PDFService {
     );
 
     doc.end();
+    return doc;
+  }
+
+  /**
+   * Stream the PDF directly to the HTTP response (for desktop browsers).
+   */
+  static async generateTransactionPDF(
+    type: 'PURCHASE' | 'SALE' | 'EXPENSE',
+    data: any,
+    res: Response
+  ): Promise<void> {
+    const config = await SiteConfig.findOne();
+    const companyName = config?.companyName || 'Golden Egg Layer Farm';
+
+    const refNo = type === 'PURCHASE' ? data.referenceNumber :
+                  type === 'SALE' ? data.invoiceNumber : data.voucherNumber;
+
+    const filename = `${type.toLowerCase()}-${refNo}.pdf`;
+
+    // Set explicit headers so browsers and WebViews know to download the file
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    const doc = PDFService.buildDocument(type, data, companyName);
+    doc.pipe(res);
+  }
+
+  /**
+   * Return the PDF as a base64-encoded string inside a JSON response.
+   * Used by mobile WebView / APK environments that cannot handle binary streams.
+   */
+  static async generateTransactionPDFBase64(
+    type: 'PURCHASE' | 'SALE' | 'EXPENSE',
+    data: any,
+    res: Response
+  ): Promise<void> {
+    const config = await SiteConfig.findOne();
+    const companyName = config?.companyName || 'Golden Egg Layer Farm';
+
+    const refNo = type === 'PURCHASE' ? data.referenceNumber :
+                  type === 'SALE' ? data.invoiceNumber : data.voucherNumber;
+
+    const filename = `${type.toLowerCase()}-${refNo}.pdf`;
+
+    const doc = PDFService.buildDocument(type, data, companyName);
+
+    // Buffer the PDF in memory
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    doc.on('end', () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      const base64 = pdfBuffer.toString('base64');
+      res.status(200).json({
+        success: true,
+        filename,
+        mimeType: 'application/pdf',
+        base64,
+      });
+    });
+    doc.on('error', (err: Error) => {
+      res.status(500).json({ success: false, message: 'PDF generation failed', error: err.message });
+    });
   }
 }
+
 export default PDFService;

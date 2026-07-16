@@ -31,7 +31,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { downloadBlob } from '../../utils/download';
+import { downloadBlob, downloadBase64PDF, isWebView } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const PurchaseList: React.FC = () => {
@@ -98,8 +98,19 @@ export const PurchaseList: React.FC = () => {
 
   const handleDownloadPDF = async (id: string, ref: string) => {
     try {
-      const response = await api.get(`/purchases/${id}/pdf`, { responseType: 'blob' });
-      downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
+      if (isWebView()) {
+        // WebView/APK: fetch as base64 JSON and trigger client-side download
+        const response = await api.get(`/purchases/${id}/pdf-base64`);
+        if (response.data?.success) {
+          downloadBase64PDF(response.data.base64, `${ref}.pdf`);
+        } else {
+          alert('Could not generate purchase PDF voucher');
+        }
+      } else {
+        // Desktop browser: stream binary PDF directly
+        const response = await api.get(`/purchases/${id}/pdf`, { responseType: 'blob' });
+        downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
+      }
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download purchase PDF voucher');

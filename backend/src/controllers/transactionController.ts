@@ -197,6 +197,21 @@ export const getPurchasePDF = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
+export const getPurchasePDFBase64 = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const purchase = await Purchase.findById(req.params.id).populate('createdBy', 'name username role');
+    if (!purchase) {
+      return res.status(404).json({ success: false, message: 'Purchase not found' });
+    }
+    if (req.user?.role === 'MANAGER' && String(purchase.createdBy._id) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    await PDFService.generateTransactionPDFBase64('PURCHASE', purchase, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ==========================================
 // SALES / OUTWARD CONTROLLERS
 // ==========================================
@@ -348,6 +363,21 @@ export const getSalePDF = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
+export const getSalePDFBase64 = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const sale = await Sale.findById(req.params.id).populate('createdBy', 'name username role');
+    if (!sale) {
+      return res.status(404).json({ success: false, message: 'Sale not found' });
+    }
+    if (req.user?.role === 'MANAGER' && String(sale.createdBy._id) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    await PDFService.generateTransactionPDFBase64('SALE', sale, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ==========================================
 // EXPENSE CONTROLLERS
 // ==========================================
@@ -491,6 +521,21 @@ export const getExpensePDF = async (req: AuthRequest, res: Response, next: NextF
     }
 
     await PDFService.generateTransactionPDF('EXPENSE', expense, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getExpensePDFBase64 = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const expense = await Expense.findById(req.params.id).populate('createdBy', 'name username role');
+    if (!expense) {
+      return res.status(404).json({ success: false, message: 'Expense not found' });
+    }
+    if (req.user?.role === 'MANAGER' && String(expense.createdBy._id) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    await PDFService.generateTransactionPDFBase64('EXPENSE', expense, res);
   } catch (error) {
     next(error);
   }

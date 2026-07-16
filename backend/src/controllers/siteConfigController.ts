@@ -8,7 +8,7 @@ export const getSiteConfig = async (req: AuthRequest, res: Response, next: NextF
     if (!config) {
       // Auto-create default config if none exists
       config = await new SiteConfig({
-        companyName: 'Shiva Farms',
+        companyName: 'Golden Egg Layer Farm',
         currency: 'INR',
         currencySymbol: '₹',
       }).save();

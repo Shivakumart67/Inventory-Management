@@ -33,7 +33,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Redirect or logout on 401, decrement loading count
+// Response Interceptor: Decrement loading count, pass errors through
 api.interceptors.response.use(
   (response) => {
     updateLoadingState(-1);
@@ -41,15 +41,8 @@ api.interceptors.response.use(
   },
   (error) => {
     updateLoadingState(-1);
-    if (error.response && error.response.status === 401) {
-      // Clear token and alert user or refresh page
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // If we are not on the login page already, redirect to it
-      if (!window.location.pathname.endsWith('/login')) {
-        window.location.href = '/login';
-      }
-    }
+    // Do NOT auto-logout or auto-redirect here.
+    // Components and AuthContext handle 401s explicitly.
     return Promise.reject(error);
   }
 );

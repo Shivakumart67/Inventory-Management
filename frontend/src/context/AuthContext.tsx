@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (savedToken && savedUserStr) {
         try {
-          // Verify token against backend
+          // Set token first so the request interceptor can attach it
           setToken(savedToken);
           const response = await api.get('/auth/me');
           if (response.data?.success) {
@@ -44,9 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             clearAuth();
           }
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-          clearAuth();
+        } catch (error: any) {
+          // Only clear auth on explicit 401 Unauthorized.
+          // On network errors (offline, server down, etc.) keep the user logged in.
+          if (error?.response?.status === 401) {
+            clearAuth();
+          } else {
+            // Restore user from localStorage so the app still works offline/on error
+            try {
+              const fallbackUser = JSON.parse(savedUserStr);
+              setUser(fallbackUser);
+            } catch {
+              clearAuth();
+            }
+          }
         }
       }
       setIsLoading(false);

@@ -13,14 +13,17 @@ import {
   listPurchases,
   getPurchaseById,
   getPurchasePDF,
+  getPurchasePDFBase64,
   createSale,
   listSales,
   getSaleById,
   getSalePDF,
+  getSalePDFBase64,
   createExpense,
   listExpenses,
   getExpenseById,
   getExpensePDF,
+  getExpensePDFBase64,
   listExpenseCategories
 } from '../controllers/transactionController';
 import {
@@ -79,6 +82,7 @@ router.post('/purchases', authenticateJWT as any, createPurchase as any);
 router.get('/purchases', authenticateJWT as any, listPurchases as any);
 router.get('/purchases/:id', authenticateJWT as any, getPurchaseById as any);
 router.get('/purchases/:id/pdf', authenticateJWT as any, getPurchasePDF as any);
+router.get('/purchases/:id/pdf-base64', authenticateJWT as any, getPurchasePDFBase64 as any);
 
 // ==========================================
 // SALES ROUTE GROUPS
@@ -87,6 +91,7 @@ router.post('/sales', authenticateJWT as any, createSale as any);
 router.get('/sales', authenticateJWT as any, listSales as any);
 router.get('/sales/:id', authenticateJWT as any, getSaleById as any);
 router.get('/sales/:id/pdf', authenticateJWT as any, getSalePDF as any);
+router.get('/sales/:id/pdf-base64', authenticateJWT as any, getSalePDFBase64 as any);
 
 // ==========================================
 // EXPENSE ROUTE GROUPS
@@ -96,6 +101,7 @@ router.get('/expenses', authenticateJWT as any, listExpenses as any);
 router.get('/expenses/categories', authenticateJWT as any, listExpenseCategories as any);
 router.get('/expenses/:id', authenticateJWT as any, getExpenseById as any);
 router.get('/expenses/:id/pdf', authenticateJWT as any, getExpensePDF as any);
+router.get('/expenses/:id/pdf-base64', authenticateJWT as any, getExpensePDFBase64 as any);
 
 // ==========================================
 // STOCK ROUTE GROUPS

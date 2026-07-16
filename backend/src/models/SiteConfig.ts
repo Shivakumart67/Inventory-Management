@@ -14,7 +14,7 @@ export interface ISiteConfig extends Document {
 
 const SiteConfigSchema: Schema = new Schema(
   {
-    companyName: { type: String, required: true, default: 'Shiva Farms' },
+    companyName: { type: String, required: true, default: 'Golden Egg Layer Farm' },
     companyAddress: { type: String },
     companyPhone: { type: String },
     companyEmail: { type: String },
