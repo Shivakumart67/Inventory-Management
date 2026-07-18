@@ -82,7 +82,7 @@ export const Login: React.FC = () => {
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 800, mb: 1 }}>
-              {config?.companyName || 'Business Management System'}
+              {config?.companyName || 'Golden Egg Layer Farm'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Sign in to manage your inventory, sales, and reports

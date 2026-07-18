@@ -36,14 +36,14 @@ async function seed() {
     if (!existingAdmin) {
       const passwordHash = await bcrypt.hash('admin123', 10);
       const newAdmin = new User({
-        name: 'System Admin',
+        name: 'Admin',
         username: adminUsername,
         passwordHash,
         role: 'ADMIN',
         status: 'ACTIVE',
         mobile: '1234567890',
         email: 'admin@inventoryapp.com',
-        address: 'HQ Office'
+        address: 'Golder Egg Farm'
       });
       await newAdmin.save();
       console.log('Admin user seeded: admin / admin123');
@@ -55,14 +55,14 @@ async function seed() {
     if (!existingManager) {
       const passwordHash = await bcrypt.hash('manager123', 10);
       const newManager = new User({
-        name: 'Inventory Manager',
+        name: 'Farm Incharge',
         username: managerUsername,
         passwordHash,
         role: 'MANAGER',
         status: 'ACTIVE',
         mobile: '0987654321',
         email: 'manager@inventoryapp.com',
-        address: 'Warehouse A'
+        address: 'Golder Egg farm'
       });
       await newManager.save();
       console.log('Manager user seeded: manager / manager123');

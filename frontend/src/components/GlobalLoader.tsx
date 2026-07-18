@@ -54,7 +54,7 @@ export const GlobalLoader: React.FC = () => {
           });
           setAnimating(false);
         }, 300);
-      }, 2000);
+      }, 3000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
