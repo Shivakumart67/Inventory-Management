@@ -165,7 +165,7 @@ export const StockLedger: React.FC = () => {
               <TableBody>
                 {ledger.map((l) => (
                   <TableRow key={l._id} hover>
-                    <TableCell>{dayjs(l.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                    <TableCell>{dayjs(l.date).format('DD/MM/YYYY')}</TableCell>
                     <TableCell>
                       <Chip
                         label={l.entryType === 'PURCHASE' ? 'COLLECTION' : l.entryType}
@@ -202,7 +202,7 @@ export const StockLedger: React.FC = () => {
                 <CardContent sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {dayjs(l.date).format('DD MM YYYY HH:mm:ss')}
+                      {dayjs(l.date).format('DD/MM/YYYY')}
                     </Typography>
                     <Chip
                       label={l.entryType === 'PURCHASE' ? 'COLLECTION' : l.entryType}

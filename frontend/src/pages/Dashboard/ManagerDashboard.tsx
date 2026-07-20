@@ -37,7 +37,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { downloadBlob } from '../../utils/download';
+import { triggerDownload } from '../../utils/download';
 
 interface ManagerStats {
   currentStock: number;
@@ -140,13 +140,12 @@ export const ManagerDashboard: React.FC = () => {
       .finally(() => setLoadingRecent(false));
   }, []);
 
-  const handleDownloadPDF = async (type: string, id: string, ref: string) => {
+  const handleDownloadPDF = async (type: string, id: string) => {
     try {
       const endpoint = type === 'PURCHASE' ? `/purchases/${id}/pdf` :
                        type === 'SALE' ? `/sales/${id}/pdf` : `/expenses/${id}/pdf`;
 
-      const response = await api.get(endpoint, { responseType: 'blob' });
-      downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
+      triggerDownload(endpoint);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download PDF invoice at this time');
@@ -339,7 +338,7 @@ export const ManagerDashboard: React.FC = () => {
                     {recentEntries.length > 0 ? (
                       recentEntries.map((entry) => (
                         <TableRow key={`${entry.type}-${entry.id}`} hover>
-                          <TableCell>{dayjs(entry.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                          <TableCell>{dayjs(entry.date).format('DD/MM/YYYY')}</TableCell>
                           <TableCell>
                             <Chip
                               label={entry.type === 'PURCHASE' ? 'COLLECTION' : entry.type}
@@ -358,7 +357,7 @@ export const ManagerDashboard: React.FC = () => {
                             <Button
                               size="small"
                               startIcon={<PdfIcon />}
-                              onClick={() => handleDownloadPDF(entry.type, entry.id, entry.ref)}
+                              onClick={() => handleDownloadPDF(entry.type, entry.id)}
                               sx={{ py: 0.2 }}
                             >
                               PDF
@@ -392,7 +391,7 @@ export const ManagerDashboard: React.FC = () => {
                             sx={{ fontSize: '0.7rem', fontWeight: 700 }}
                           />
                           <Typography variant="caption" color="text.secondary">
-                            {dayjs(entry.date).format('DD MM YYYY HH:mm:ss')}
+                            {dayjs(entry.date).format('DD/MM/YYYY')}
                           </Typography>
                         </Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>{entry.ref}</Typography>
@@ -404,7 +403,7 @@ export const ManagerDashboard: React.FC = () => {
                           <Button
                             size="small"
                             startIcon={<PdfIcon />}
-                            onClick={() => handleDownloadPDF(entry.type, entry.id, entry.ref)}
+                            onClick={() => handleDownloadPDF(entry.type, entry.id)}
                           >
                             PDF
                           </Button>

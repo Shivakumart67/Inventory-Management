@@ -24,6 +24,7 @@ import {
 import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
+import { buildDownloadUrl } from '../../utils/download';
 
 export const ReportsDashboard: React.FC = () => {
   const { config } = useSiteConfig();
@@ -116,19 +117,13 @@ export const ReportsDashboard: React.FC = () => {
         if (entryType) params.entryType = entryType;
       }
 
-      // Trigger file download stream
-      const response = await api.get('/reports/export', { params, responseType: 'blob' });
-
-      const fileExt = format === 'excel' ? 'xlsx' : 'csv';
-      const contentType = format === 'excel'
-        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        : 'text/csv';
-
-      const blob = new Blob([response.data], { type: contentType });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = `${reportType}_report_${dayjs().format('YYYYMMDD')}.${fileExt}`;
-      link.click();
+      const query = new URLSearchParams({
+        ...params,
+        type: reportType,
+        format,
+      });
+      const downloadUrl = `${buildDownloadUrl('/reports/export')}?${query.toString()}`;
+      window.location.href = downloadUrl;
     } catch (error) {
       console.error('Export failed:', error);
       alert('Could not export report file');
@@ -391,7 +386,7 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.purchaseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                          <TableCell>{dayjs(item.purchaseDate).format('DD/MM/YYYY')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.referenceNumber}</TableCell>
                           <TableCell align="right">{item.quantity}</TableCell>
                           <TableCell align="right">{currencySymbol}{item.ratePerUnit?.toFixed(2)}</TableCell>
@@ -424,7 +419,7 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.salesDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                          <TableCell>{dayjs(item.salesDate).format('DD/MM/YYYY')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.invoiceNumber}</TableCell>
                           <TableCell>{item.buyerName}</TableCell>
                           <TableCell align="right">{item.quantity}</TableCell>
@@ -459,7 +454,7 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.items?.length > 0 ? (
                       reportData.items.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.expenseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                          <TableCell>{dayjs(item.expenseDate).format('DD/MM/YYYY')}</TableCell>
                           <TableCell sx={{ fontWeight: 600 }}>{item.voucherNumber}</TableCell>
                           <TableCell>{item.spentFor}</TableCell>
                           <TableCell>{item.category}</TableCell>
@@ -497,7 +492,7 @@ export const ReportsDashboard: React.FC = () => {
                     {reportData.ledgerItems?.length > 0 ? (
                       reportData.ledgerItems.map((item: any) => (
                         <TableRow key={item._id} hover>
-                          <TableCell>{dayjs(item.date).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                          <TableCell>{dayjs(item.date).format('DD/MM/YYYY')}</TableCell>
                           <TableCell>
                             <Chip
                               label={item.entryType === 'PURCHASE' ? 'COLLECTION' : item.entryType}
@@ -541,7 +536,7 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.referenceNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.purchaseDate).format('DD MM YYYY HH:mm:ss')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.purchaseDate).format('DD/MM/YYYY')}</Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary">Qty: {item.quantity} @ {currencySymbol}{item.ratePerUnit?.toFixed(2)}</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>Total: {currencySymbol}{item.totalAmount?.toFixed(2)}</Typography>
@@ -556,7 +551,7 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.invoiceNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.salesDate).format('DD MM YYYY HH:mm:ss')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.salesDate).format('DD/MM/YYYY')}</Typography>
                   </Box>
                   <Typography variant="body2">Buyer: {item.buyerName}</Typography>
                   <Typography variant="body2" color="text.secondary">Qty: {item.quantity} @ {currencySymbol}{item.unitSellingRate?.toFixed(2)}</Typography>
@@ -572,7 +567,7 @@ export const ReportsDashboard: React.FC = () => {
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>{item.voucherNumber}</Typography>
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.expenseDate).format('DD MM YYYY HH:mm:ss')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.expenseDate).format('DD/MM/YYYY')}</Typography>
                   </Box>
                   <Typography variant="body2">{item.spentFor}</Typography>
                   <Typography variant="body2" color="text.secondary">{item.category}{item.subcategory ? ` / ${item.subcategory}` : ''}</Typography>
@@ -593,7 +588,7 @@ export const ReportsDashboard: React.FC = () => {
                       color={item.entryType === 'PURCHASE' ? 'info' : item.entryType === 'SALE' ? 'success' : 'default'}
                       sx={{ fontSize: '0.65rem', fontWeight: 700 }}
                     />
-                    <Typography variant="caption" color="text.secondary">{dayjs(item.date).format('DD MM YYYY HH:mm:ss')}</Typography>
+                    <Typography variant="caption" color="text.secondary">{dayjs(item.date).format('DD/MM/YYYY')}</Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.referenceNumber}</Typography>
                   <Typography variant="body2" color="text.secondary">

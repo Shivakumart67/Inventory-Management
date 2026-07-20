@@ -10,5 +10,5 @@ export function formatNumber(value: number | null | undefined, digits = 0): stri
 
 export function formatDate(date: any): string {
   if (!date) return '';
-  return dayjs(date).format('DD MM YYYY HH:mm:ss');
+  return dayjs(date).format('DD/MM/YYYY');
 }

@@ -31,7 +31,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { downloadBlob, downloadBase64PDF, isWebView } from '../../utils/download';
+import { triggerDownload } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const PurchaseList: React.FC = () => {
@@ -96,21 +96,9 @@ export const PurchaseList: React.FC = () => {
     });
   };
 
-  const handleDownloadPDF = async (id: string, ref: string) => {
+  const handleDownloadPDF = async (id: string) => {
     try {
-      if (isWebView()) {
-        // WebView/APK: fetch as base64 JSON and trigger client-side download
-        const response = await api.get(`/purchases/${id}/pdf-base64`);
-        if (response.data?.success) {
-          downloadBase64PDF(response.data.base64, `${ref}.pdf`);
-        } else {
-          alert('Could not generate purchase PDF voucher');
-        }
-      } else {
-        // Desktop browser: stream binary PDF directly
-        const response = await api.get(`/purchases/${id}/pdf`, { responseType: 'blob' });
-        downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
-      }
+      triggerDownload(`/purchases/${id}/pdf`);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download purchase PDF voucher');
@@ -211,7 +199,7 @@ export const PurchaseList: React.FC = () => {
                     sx={{ cursor: 'pointer' }}
                     onClick={() => handleRowClick(p)}
                   >
-                    <TableCell>{dayjs(p.purchaseDate).format('DD MM YYYY HH:mm:ss')}</TableCell>
+                    <TableCell>{dayjs(p.purchaseDate).format('DD/MM/YYYY')}</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>{p.referenceNumber}</TableCell>
                     <TableCell>{p.quantity}</TableCell>
                     <TableCell>{formatCurrency(p.ratePerUnit, currencySymbol)}</TableCell>
@@ -226,7 +214,7 @@ export const PurchaseList: React.FC = () => {
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleDownloadPDF(p._id, p.referenceNumber)}
+                          onClick={() => handleDownloadPDF(p._id)}
                           color="secondary"
                         >
                           <PdfIcon fontSize="small" />
@@ -249,7 +237,7 @@ export const PurchaseList: React.FC = () => {
                       {p.referenceNumber}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {dayjs(p.purchaseDate).format('DD MM YYYY HH:mm:ss')}
+                      {dayjs(p.purchaseDate).format('DD/MM/YYYY')}
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -265,7 +253,7 @@ export const PurchaseList: React.FC = () => {
                         size="small"
                         variant="outlined"
                         startIcon={<PdfIcon />}
-                        onClick={() => handleDownloadPDF(p._id, p.referenceNumber)}
+                        onClick={() => handleDownloadPDF(p._id)}
                       >
                         Voucher
                       </Button>
@@ -302,7 +290,7 @@ export const PurchaseList: React.FC = () => {
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary">Collection Date</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {dayjs(selectedPurchase.purchaseDate).format('DD MM YYYY HH:mm:ss')}
+                    {dayjs(selectedPurchase.purchaseDate).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
 
@@ -343,7 +331,7 @@ export const PurchaseList: React.FC = () => {
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary">Created By</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {selectedPurchase.createdBy?.name} (@{selectedPurchase.createdBy?.username}) at {dayjs(selectedPurchase.createdAt).format('DD MM YYYY HH:mm:ss')}
+                    {selectedPurchase.createdBy?.name} (@{selectedPurchase.createdBy?.username}) at {dayjs(selectedPurchase.createdAt).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
               </Grid>
@@ -353,7 +341,7 @@ export const PurchaseList: React.FC = () => {
                 variant="contained"
                 color="secondary"
                 startIcon={<PdfIcon />}
-                onClick={() => handleDownloadPDF(selectedPurchase._id, selectedPurchase.referenceNumber)}
+                onClick={() => handleDownloadPDF(selectedPurchase._id)}
               >
                 Download PDF
               </Button>

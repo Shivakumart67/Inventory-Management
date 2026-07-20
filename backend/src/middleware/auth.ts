@@ -12,12 +12,14 @@ export const authenticateJWT = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
+  const queryToken = typeof req.query.token === 'string' ? req.query.token : null;
+  const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
+  const token = tokenFromHeader || queryToken;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Authorization token required' });
   }
 
-  const token = authHeader.split(' ')[1];
   const jwtSecret = process.env.JWT_SECRET || 'fallback_jwt_secret_key_123456';
 
   try {

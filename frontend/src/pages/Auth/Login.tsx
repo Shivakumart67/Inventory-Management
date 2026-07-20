@@ -28,7 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const Login: React.FC = () => {
   const { login, isAuthenticated, user } = useAuth();
-  const { config } = useSiteConfig();
+  const { config, isLoading } = useSiteConfig();
   const navigate = useNavigate();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -66,6 +66,31 @@ export const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (isLoading || !config) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+          p: 3,
+        }}
+      >
+        <Box sx={{ textAlign: 'center', maxWidth: 420 }}>
+          <CircularProgress size={56} thickness={4} sx={{ mb: 2, color: 'primary.main' }} />
+          <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main', mb: 1 }}>
+            System is getting ready
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Loading site details from the server. Please wait for the login screen to become available.
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box

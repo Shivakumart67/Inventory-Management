@@ -31,7 +31,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { downloadBlob } from '../../utils/download';
+import { triggerDownload } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const SalesList: React.FC = () => {
@@ -99,10 +99,9 @@ export const SalesList: React.FC = () => {
     });
   };
 
-  const handleDownloadPDF = async (id: string, ref: string) => {
+  const handleDownloadPDF = async (id: string) => {
     try {
-      const response = await api.get(`/sales/${id}/pdf`, { responseType: 'blob' });
-      downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
+      triggerDownload(`/sales/${id}/pdf`);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download sales invoice PDF');
@@ -213,7 +212,7 @@ export const SalesList: React.FC = () => {
                     sx={{ cursor: 'pointer' }}
                     onClick={() => handleRowClick(s)}
                   >
-                    <TableCell>{dayjs(s.salesDate).format('YYYY-MM-DD')}</TableCell>
+                    <TableCell>{dayjs(s.salesDate).format('DD/MM/YYYY')}</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>{s.invoiceNumber}</TableCell>
                     <TableCell>{s.buyerName}</TableCell>
                     <TableCell>{s.quantity} Units</TableCell>
@@ -229,7 +228,7 @@ export const SalesList: React.FC = () => {
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleDownloadPDF(s._id, s.invoiceNumber)}
+                          onClick={() => handleDownloadPDF(s._id)}
                           color="secondary"
                         >
                           <PdfIcon fontSize="small" />
@@ -252,7 +251,7 @@ export const SalesList: React.FC = () => {
                       {s.invoiceNumber}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {dayjs(s.salesDate).format('YYYY-MM-DD')}
+                      {dayjs(s.salesDate).format('DD/MM/YYYY')}
                     </Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -271,7 +270,7 @@ export const SalesList: React.FC = () => {
                         size="small"
                         variant="outlined"
                         startIcon={<PdfIcon />}
-                        onClick={() => handleDownloadPDF(s._id, s.invoiceNumber)}
+                        onClick={() => handleDownloadPDF(s._id)}
                       >
                         Invoice
                       </Button>
@@ -308,7 +307,7 @@ export const SalesList: React.FC = () => {
                 <Grid item xs={12} sm={6}>
                   <Typography variant="caption" color="text.secondary">Sales Date</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {dayjs(selectedSale.salesDate).format('YYYY-MM-DD')}
+                    {dayjs(selectedSale.salesDate).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
 
@@ -362,7 +361,7 @@ export const SalesList: React.FC = () => {
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary">Created By</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {selectedSale.createdBy?.name} (@{selectedSale.createdBy?.username}) at {dayjs(selectedSale.createdAt).format('YYYY-MM-DD HH:mm')}
+                    {selectedSale.createdBy?.name} (@{selectedSale.createdBy?.username}) at {dayjs(selectedSale.createdAt).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
               </Grid>
@@ -372,7 +371,7 @@ export const SalesList: React.FC = () => {
                 variant="contained"
                 color="secondary"
                 startIcon={<PdfIcon />}
-                onClick={() => handleDownloadPDF(selectedSale._id, selectedSale.invoiceNumber)}
+                onClick={() => handleDownloadPDF(selectedSale._id)}
               >
                 Download Invoice PDF
               </Button>

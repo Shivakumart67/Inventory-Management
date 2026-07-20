@@ -32,7 +32,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { downloadBlob } from '../../utils/download';
+import { triggerDownload } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const ExpenseList: React.FC = () => {
@@ -116,10 +116,9 @@ export const ExpenseList: React.FC = () => {
     });
   };
 
-  const handleDownloadPDF = async (id: string, ref: string) => {
+  const handleDownloadPDF = async (id: string) => {
     try {
-      const response = await api.get(`/expenses/${id}/pdf`, { responseType: 'blob' });
-      downloadBlob(new Blob([response.data], { type: 'application/pdf' }), `${ref}.pdf`);
+      triggerDownload(`/expenses/${id}/pdf`);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download expense PDF voucher');
@@ -238,7 +237,7 @@ export const ExpenseList: React.FC = () => {
                     sx={{ cursor: 'pointer' }}
                     onClick={() => handleRowClick(e)}
                   >
-                    <TableCell>{dayjs(e.expenseDate).format('YYYY-MM-DD')}</TableCell>
+                    <TableCell>{dayjs(e.expenseDate).format('DD/MM/YYYY')}</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>{e.voucherNumber}</TableCell>
                     <TableCell>{e.spentFor}</TableCell>
                     <TableCell>{e.category}</TableCell>
@@ -254,7 +253,7 @@ export const ExpenseList: React.FC = () => {
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleDownloadPDF(e._id, e.voucherNumber)}
+                          onClick={() => handleDownloadPDF(e._id)}
                           color="secondary"
                         >
                           <PdfIcon fontSize="small" />
@@ -277,7 +276,7 @@ export const ExpenseList: React.FC = () => {
                       {e.voucherNumber}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {dayjs(e.expenseDate).format('YYYY-MM-DD')}
+                      {dayjs(e.expenseDate).format('DD/MM/YYYY')}
                     </Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -296,7 +295,7 @@ export const ExpenseList: React.FC = () => {
                         size="small"
                         variant="outlined"
                         startIcon={<PdfIcon />}
-                        onClick={() => handleDownloadPDF(e._id, e.voucherNumber)}
+                        onClick={() => handleDownloadPDF(e._id)}
                       >
                         Voucher
                       </Button>
@@ -333,7 +332,7 @@ export const ExpenseList: React.FC = () => {
                 <Grid item xs={6}>
                   <Typography variant="caption" color="text.secondary">Expense Date</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {dayjs(selectedExpense.expenseDate).format('YYYY-MM-DD')}
+                    {dayjs(selectedExpense.expenseDate).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -402,7 +401,7 @@ export const ExpenseList: React.FC = () => {
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary">Created By</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {selectedExpense.createdBy?.name} (@{selectedExpense.createdBy?.username}) at {dayjs(selectedExpense.createdAt).format('YYYY-MM-DD HH:mm')}
+                    {selectedExpense.createdBy?.name} (@{selectedExpense.createdBy?.username}) at {dayjs(selectedExpense.createdAt).format('DD/MM/YYYY')}
                   </Typography>
                 </Grid>
               </Grid>
@@ -412,7 +411,7 @@ export const ExpenseList: React.FC = () => {
                 variant="contained"
                 color="secondary"
                 startIcon={<PdfIcon />}
-                onClick={() => handleDownloadPDF(selectedExpense._id, selectedExpense.voucherNumber)}
+                onClick={() => handleDownloadPDF(selectedExpense._id)}
               >
                 Download Voucher PDF
               </Button>

@@ -1,40 +1,25 @@
-export function downloadBlob(blob: Blob, filename: string): void {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-/**
- * Download a PDF from a base64 string.
- * Works in both desktop browsers and mobile WebView / APK wrappers.
- */
-export function downloadBase64PDF(base64: string, filename: string): void {
-  // Convert base64 → binary → Blob, then trigger via anchor
-  const byteChars = atob(base64);
-  const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) {
-    byteNumbers[i] = byteChars.charCodeAt(i);
+export function buildDownloadUrl(endpoint: string): string {
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams();
+
+  if (token) {
+    params.set('token', token);
   }
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: 'application/pdf' });
-  downloadBlob(blob, filename);
+
+  const queryString = params.toString();
+  return `${API_BASE_URL}${endpoint}${queryString ? `?${queryString}` : ''}`;
 }
 
-/**
- * Detect if the app is running inside a WebView-based APK wrapper.
- * HTMLtoAPK / WebViewGold wrappers typically don't include 'Chrome' in the UA
- * or include 'wv' in it, or have no proper download handling.
- */
+export function triggerDownload(endpoint: string): void {
+  const downloadUrl = buildDownloadUrl(endpoint);
+  window.location.href = downloadUrl;
+}
+
 export function isWebView(): boolean {
   const ua = navigator.userAgent || '';
-  // Android WebView: contains 'wv' in parentheses or is Android without Chrome
   const isAndroidWebView = /Android/.test(ua) && (/wv\)/.test(ua) || !/Chrome/.test(ua));
-  // iOS WebView: is iOS but NOT Safari standalone
   const isIosWebView = /iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua);
   return isAndroidWebView || isIosWebView;
 }

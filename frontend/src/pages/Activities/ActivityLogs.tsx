@@ -325,7 +325,7 @@ export const ActivityLogs: React.FC = () => {
                               wordBreak: 'break-word',
                             }}
                           >
-                            {dayjs(log.timestamp).format('YYYY-MM-DD HH:mm:ss')}
+                            {dayjs(log.timestamp).format('DD/MM/YYYY')}
                           </Typography>
                         </Grid>
 
@@ -417,7 +417,7 @@ export const ActivityLogs: React.FC = () => {
                             minWidth: 170,
                           }}
                         >
-                          {dayjs(log.timestamp).format('YYYY-MM-DD HH:mm:ss')}
+                          {dayjs(log.timestamp).format('DD/MM/YYYY')}
                         </TableCell>
 
                         <TableCell sx={{ fontWeight: 600, minWidth: 180 }}>

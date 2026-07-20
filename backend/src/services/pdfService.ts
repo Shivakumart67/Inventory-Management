@@ -42,9 +42,9 @@ export class PDFService {
     // 2. Transaction Information Block
     doc.fontSize(10).fillColor('#4b5563');
     doc.text(`${refLabel} ${refNo}`, 50, 135);
-    doc.text(`Date: ${dayjs(date).format('DD MM YYYY HH:mm:ss')}`, 50, 150);
+    doc.text(`Date: ${dayjs(date).format('DD/MM/YYYY')}`, 50, 150);
     doc.text(`Created By: ${creatorName}`, 50, 165);
-    doc.text(`Created At: ${dayjs(data.createdAt).format('DD MM YYYY HH:mm:ss')}`, 50, 180);
+    doc.text(`Created At: ${dayjs(data.createdAt).format('DD/MM/YYYY')}`, 50, 180);
 
     // Party Details
     let partyLabel = '';
