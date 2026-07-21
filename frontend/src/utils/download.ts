@@ -2,8 +2,13 @@ import api from '../services/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export function buildDownloadUrl(endpoint: string): string {
-  return `${API_BASE_URL}${endpoint}`;
+export function buildDownloadUrl(endpoint: string, includeToken = false): string {
+  const base = `${API_BASE_URL}${endpoint}`;
+  if (!includeToken) return base;
+  const token = localStorage.getItem('token');
+  if (!token) return base;
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}token=${encodeURIComponent(token)}`;
 }
 
 const getFilenameFromDisposition = (contentDisposition?: string | null, fallbackFilename = 'download.bin'): string => {
@@ -21,6 +26,39 @@ const getExtensionFromMime = (mimeType: string): string => {
 };
 
 export async function downloadFile(endpoint: string, filename?: string): Promise<void> {
+  // For mobile WebViews / native apps, blob downloads may be unsupported.
+  // In that case, return a direct backend URL (with token) so the native layer can handle the download.
+  if (isWebView()) {
+    const directUrl = buildDownloadUrl(endpoint, true);
+    const payload = JSON.stringify({ type: 'DOWNLOAD', url: directUrl, filename: filename || null });
+
+    // Preferred: Notify React Native WebView bridge
+    try {
+      const rn = (window as any).ReactNativeWebView;
+      if (rn && typeof rn.postMessage === 'function') {
+        rn.postMessage(payload);
+        return;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    // iOS WKWebView handler convention
+    try {
+      const handler = (window as any).webkit?.messageHandlers?.nativeApp;
+      if (handler && typeof handler.postMessage === 'function') {
+        handler.postMessage({ url: directUrl, filename: filename || null });
+        return;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    // Fallback: navigate to URL so native download handlers may pick it up
+    window.location.href = directUrl;
+    return;
+  }
+
   const response = await api.get(endpoint, {
     responseType: 'blob',
   });
