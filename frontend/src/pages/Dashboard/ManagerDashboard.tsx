@@ -37,7 +37,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { triggerDownload } from '../../utils/download';
+import { downloadFile } from '../../utils/download';
 
 interface ManagerStats {
   currentStock: number;
@@ -145,7 +145,7 @@ export const ManagerDashboard: React.FC = () => {
       const endpoint = type === 'PURCHASE' ? `/purchases/${id}/pdf` :
                        type === 'SALE' ? `/sales/${id}/pdf` : `/expenses/${id}/pdf`;
 
-      triggerDownload(endpoint);
+      await downloadFile(endpoint);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download PDF invoice at this time');

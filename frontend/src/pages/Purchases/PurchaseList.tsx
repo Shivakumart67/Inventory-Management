@@ -31,7 +31,7 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { triggerDownload } from '../../utils/download';
+import { downloadFile } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const PurchaseList: React.FC = () => {
@@ -98,7 +98,7 @@ export const PurchaseList: React.FC = () => {
 
   const handleDownloadPDF = async (id: string) => {
     try {
-      triggerDownload(`/purchases/${id}/pdf`);
+      await downloadFile(`/purchases/${id}/pdf`);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download purchase PDF voucher');

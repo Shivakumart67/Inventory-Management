@@ -24,7 +24,7 @@ import {
 import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
-import { buildDownloadUrl } from '../../utils/download';
+import {  downloadFile } from '../../utils/download';
 
 export const ReportsDashboard: React.FC = () => {
   const { config } = useSiteConfig();
@@ -122,9 +122,10 @@ export const ReportsDashboard: React.FC = () => {
         type: reportType,
         format,
       });
-      const downloadUrl = `${buildDownloadUrl('/reports/export')}?${query.toString()}`;
-      window.location.href = downloadUrl;
-    } catch (error) {
+      const endpoint = `/reports/export?${query.toString()}`;
+      const fallbackFilename = `report_${reportType}_${dayjs().format('YYYYMMDD')}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      await downloadFile(endpoint, fallbackFilename);
+    } catch (error: any) {
       console.error('Export failed:', error);
       alert('Could not export report file');
     }

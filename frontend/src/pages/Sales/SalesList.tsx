@@ -31,8 +31,8 @@ import api from '../../services/api';
 import dayjs from 'dayjs';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
-import { triggerDownload } from '../../utils/download';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { downloadFile } from '../../utils/download';
 
 export const SalesList: React.FC = () => {
   const { config } = useSiteConfig();
@@ -101,7 +101,7 @@ export const SalesList: React.FC = () => {
 
   const handleDownloadPDF = async (id: string) => {
     try {
-      triggerDownload(`/sales/${id}/pdf`);
+      await downloadFile(`/sales/${id}/pdf`);
     } catch (error) {
       console.error('PDF download error:', error);
       alert('Could not download sales invoice PDF');
