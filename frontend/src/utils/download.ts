@@ -25,7 +25,7 @@ export async function downloadFile(endpoint: string, filename?: string): Promise
     responseType: 'blob',
   });
 
-  const contentType = response.headers['content-type'] || 'application/octet-stream';
+  const contentType: any = response.headers['content-type'] || 'application/octet-stream';
   const blob = new Blob([response.data], { type: contentType });
   const resolvedFilename = filename || getFilenameFromDisposition(response.headers['content-disposition'], `download.${getExtensionFromMime(contentType)}`);
 
