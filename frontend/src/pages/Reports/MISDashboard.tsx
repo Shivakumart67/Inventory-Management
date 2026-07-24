@@ -15,7 +15,9 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress
+  CircularProgress,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Download as DownloadIcon,
@@ -43,6 +45,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { formatCurrency } from '../../utils/format';
+import { downloadFile } from '../../utils/download';
 
 const PRESET_7_DAYS = '7_days';
 const PRESET_30_DAYS = '30_days';
@@ -58,6 +61,9 @@ export const MISDashboard: React.FC = () => {
   const { config } = useSiteConfig();
   const currencySymbol = config?.currencySymbol || '₹';
   const isAdmin = user?.role === 'ADMIN';
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Filters state
   const [preset, setPreset] = useState<string>(PRESET_30_DAYS);
@@ -164,48 +170,41 @@ export const MISDashboard: React.FC = () => {
     fetchMISData();
   };
 
-  // CSV/Excel Client Export Function
-  const exportPivotCSV = () => {
-    const headers = [
-      'Date/Period',
-      'Inward Eggs Collected (Qty)',
-      'Outward Eggs Sold (Qty)',
-      'Collection Cost ($)',
-      'Sales Revenue ($)',
-      'Expenses ($)',
-      'Net Profit/Loss ($)'
-    ].map(h => h.replace('$', currencySymbol));
+  // CSV/Excel backend Download Function
+  const exportPivotCSV = async () => {
+    let finalFrom = fromDate;
+    let finalTo = toDate;
 
-    const rows = pivotData.map(r => [
-      r.date,
-      r.inwardQty,
-      r.outwardQty,
-      r.cost.toFixed(2),
-      r.revenue.toFixed(2),
-      r.expenses.toFixed(2),
-      r.profit.toFixed(2)
-    ]);
+    if (preset !== PRESET_CUSTOM) {
+      const range = getDateRange(preset);
+      finalFrom = range.start;
+      finalTo = range.end;
+    }
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const queryParams = new URLSearchParams();
+    queryParams.append('type', 'mis');
+    queryParams.append('format', 'csv');
+    if (finalFrom) queryParams.append('fromDate', finalFrom);
+    if (finalTo) queryParams.append('toDate', finalTo);
+    if (isAdmin && creator) queryParams.append('user', creator);
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
     const dateStr = dayjs().format('YYYYMMDD_HHmmss');
-    link.setAttribute('download', `MIS_Summary_Report_${dateStr}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `MIS_Summary_Report_${dateStr}.csv`;
+
+    try {
+      await downloadFile(`/reports/export?${queryParams.toString()}`, filename);
+    } catch (error) {
+      console.error('CSV export error:', error);
+      alert('Could not download CSV summary report at this time');
+    }
   };
 
   return (
     <Box sx={{ flexGrow: 1, pb: 4 }}>
       {/* Page Header */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ mb: 4, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: 2 }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
+          <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>
             MIS Business Dashboard
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -218,6 +217,8 @@ export const MISDashboard: React.FC = () => {
           startIcon={<DownloadIcon />}
           onClick={exportPivotCSV}
           disabled={pivotData.length === 0}
+          fullWidth={isMobile}
+          sx={{ py: 1 }}
         >
           Export Summary Table
         </Button>
@@ -274,7 +275,7 @@ export const MISDashboard: React.FC = () => {
               )}
 
               {isAdmin && (
-                <Grid item xs={12} sm={4} md={3}>
+                <Grid item xs={12} sm={preset === PRESET_CUSTOM ? 6 : 4} md={3}>
                   <TextField
                     fullWidth
                     select
@@ -293,13 +294,13 @@ export const MISDashboard: React.FC = () => {
                 </Grid>
               )}
 
-              <Grid item xs={12} sm={4} md={preset === PRESET_CUSTOM ? 1 : 3} sx={{ display: 'flex', gap: 2 }}>
-                {preset === PRESET_CUSTOM && (
+              {preset === PRESET_CUSTOM && (
+                <Grid item xs={12} sm={isAdmin ? 6 : 12} md={1.5}>
                   <Button variant="contained" color="primary" type="submit" startIcon={<FilterIcon />} fullWidth>
                     Apply
                   </Button>
-                )}
-              </Grid>
+                </Grid>
+              )}
             </Grid>
           </form>
         </CardContent>
@@ -312,14 +313,14 @@ export const MISDashboard: React.FC = () => {
       ) : (
         <>
           {/* Glassmorphic KPI Summary Grid */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={4}>
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0f766e', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent>
+                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
                     Egg Collections
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f766e', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0f766e', my: 0.5 }}>
                     {kpis.totalInwardQty.toLocaleString()} Eggs
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -329,13 +330,13 @@ export const MISDashboard: React.FC = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0ea5e9', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent>
+                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
                     Sales Output
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#0ea5e9', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0ea5e9', my: 0.5 }}>
                     {kpis.totalOutwardQty.toLocaleString()} Eggs
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -345,13 +346,13 @@ export const MISDashboard: React.FC = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <Card sx={{ borderRadius: 3, borderLeft: '5px solid #ef4444', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent>
+                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
                     Other Expenses
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>
                     {formatCurrency(kpis.totalExpenses, currencySymbol)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -361,23 +362,24 @@ export const MISDashboard: React.FC = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={12}>
+            <Grid item xs={12} sm={6} md={3}>
               <Card
                 sx={{
                   borderRadius: 3,
                   background: kpis.netProfit >= 0
                     ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
                     : 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-                  boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)'
+                  boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)',
+                  height: '100%'
                 }}
               >
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
+                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: { xs: 2, sm: 2.5 } }}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>
                       Net profit / loss
                     </Typography>
                     <Typography
-                      variant="h4"
+                      variant={isMobile ? "h6" : "h5"}
                       sx={{
                         fontWeight: 900,
                         color: kpis.netProfit >= 0 ? 'success.dark' : 'error.dark',
@@ -389,9 +391,9 @@ export const MISDashboard: React.FC = () => {
                   </Box>
                   <Box>
                     {kpis.netProfit >= 0 ? (
-                      <TrendingUpIcon sx={{ fontSize: 48, color: 'success.main' }} />
+                      <TrendingUpIcon sx={{ fontSize: isMobile ? 36 : 40, color: 'success.main' }} />
                     ) : (
-                      <TrendingDownIcon sx={{ fontSize: 48, color: 'error.main' }} />
+                      <TrendingDownIcon sx={{ fontSize: isMobile ? 36 : 40, color: 'error.main' }} />
                     )}
                   </Box>
                 </CardContent>
@@ -404,21 +406,21 @@ export const MISDashboard: React.FC = () => {
             {/* Chart 1: Collections vs Sales Volume */}
             <Grid item xs={12} lg={6}>
               <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
                     Egg Volume Comparison (Qty)
                   </Typography>
-                  <Box sx={{ width: '100%', height: 280 }}>
+                  <Box sx={{ width: '100%', height: { xs: 220, sm: 280 } }}>
                     {trendData.length === 0 ? (
                       <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography color="text.secondary">No trend data available for this range</Typography>
                       </Box>
                     ) : (
                       <ResponsiveContainer>
-                        <LineChart data={trendData}>
+                        <LineChart data={trendData} margin={{ left: -10, right: 10 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '0.75rem' }} />
-                          <YAxis stroke="#94a3b8" style={{ fontSize: '0.75rem' }} />
+                          <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '0.7rem' }} tickMargin={8} minTickGap={15} />
+                          <YAxis stroke="#94a3b8" style={{ fontSize: '0.7rem' }} />
                           <RechartsTooltip />
                           <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
                           <Line type="monotone" name="Collected Eggs" dataKey="inwardQty" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 2 }} />
@@ -434,21 +436,21 @@ export const MISDashboard: React.FC = () => {
             {/* Chart 2: Financial Flow Comparison */}
             <Grid item xs={12} lg={6}>
               <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
                     Revenue vs Collection Costs & Expenses ({currencySymbol})
                   </Typography>
-                  <Box sx={{ width: '100%', height: 280 }}>
+                  <Box sx={{ width: '100%', height: { xs: 220, sm: 280 } }}>
                     {trendData.length === 0 ? (
                       <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography color="text.secondary">No trend data available for this range</Typography>
                       </Box>
                     ) : (
                       <ResponsiveContainer>
-                        <AreaChart data={trendData}>
+                        <AreaChart data={trendData} margin={{ left: -10, right: 10 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '0.75rem' }} />
-                          <YAxis stroke="#94a3b8" style={{ fontSize: '0.75rem' }} />
+                          <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: '0.7rem' }} tickMargin={8} minTickGap={15} />
+                          <YAxis stroke="#94a3b8" style={{ fontSize: '0.7rem' }} />
                           <RechartsTooltip formatter={(value: number) => formatCurrency(value, currencySymbol)} />
                           <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
                           <Area type="monotone" name="Sales Revenue" dataKey="revenue" fill="#d0eefb" stroke="#0ea5e9" strokeWidth={2} />
@@ -465,13 +467,13 @@ export const MISDashboard: React.FC = () => {
             {/* Chart 3: Expense Category Breakdown */}
             <Grid item xs={12}>
               <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Grid container spacing={3} alignItems="center">
                     <Grid item xs={12} md={7}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
                         Expense Share Breakdown
                       </Typography>
-                      <Box sx={{ width: '100%', height: 240 }}>
+                      <Box sx={{ width: '100%', height: { xs: 200, sm: 240 } }}>
                         {expenseCategories.length === 0 ? (
                           <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Typography color="text.secondary">No expense transactions registered in this range</Typography>
@@ -484,8 +486,8 @@ export const MISDashboard: React.FC = () => {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                                outerRadius={85}
+                                label={isMobile ? undefined : ({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                outerRadius={isMobile ? 55 : 85}
                                 fill="#8884d8"
                                 dataKey="value"
                               >
@@ -500,11 +502,11 @@ export const MISDashboard: React.FC = () => {
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={5}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: { xs: 1, sm: 2 } }}>
                         {expenseCategories.map((ec, idx) => (
                           <Box key={ec.name} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: COLORS[idx % COLORS.length] }} />
+                              <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: COLORS[idx % COLORS.length], flexShrink: 0 }} />
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>{ec.name}</Typography>
                             </Box>
                             <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
@@ -525,7 +527,7 @@ export const MISDashboard: React.FC = () => {
             Interactive MIS Summary Ledger
           </Typography>
 
-          <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
+          <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', overflowX: 'auto' }}>
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: 'grey.50' }}>
@@ -581,4 +583,5 @@ export const MISDashboard: React.FC = () => {
     </Box>
   );
 };
+
 export default MISDashboard;

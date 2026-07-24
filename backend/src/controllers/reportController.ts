@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 import Purchase from '../models/Purchase';
 import Sale from '../models/Sale';
@@ -270,6 +271,129 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
         l.closingStock,
         l.notes || '',
         (l.createdBy as any)?.name || 'System',
+      ]);
+    } else if (type === 'mis') {
+      reportName = 'mis_summary_report';
+      const start = fromDate ? dayjs(fromDate as string).startOf('day') : dayjs().subtract(30, 'day').startOf('day');
+      const end = toDate ? dayjs(toDate as string).endOf('day') : dayjs().endOf('day');
+
+      const startDate = start.toDate();
+      const endDate = end.toDate();
+
+      let creatorFilter: any = {};
+      if (req.user?.role === 'MANAGER') {
+        creatorFilter = { createdBy: req.user._id };
+      } else if (user) {
+        creatorFilter = { createdBy: new mongoose.Types.ObjectId(user as string) };
+      }
+
+      const purchaseMatch = { purchaseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+      const salesMatch = { salesDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+      const expenseMatch = { expenseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter };
+
+      const diffDays = end.diff(start, 'day');
+      const isDaily = diffDays <= 31;
+      const formatString = isDaily ? '%Y-%m-%d' : '%Y-%m';
+
+      const [purchaseGroup, salesGroup, expenseGroup] = await Promise.all([
+        Purchase.aggregate([
+          { $match: purchaseMatch },
+          {
+            $group: {
+              _id: { $dateToString: { format: formatString, date: '$purchaseDate' } },
+              totalQuantity: { $sum: '$quantity' },
+              totalCost: { $sum: '$totalAmount' }
+            }
+          }
+        ]),
+        Sale.aggregate([
+          { $match: salesMatch },
+          {
+            $group: {
+              _id: { $dateToString: { format: formatString, date: '$salesDate' } },
+              totalQuantity: { $sum: '$quantity' },
+              totalRevenue: { $sum: '$totalSaleAmount' }
+            }
+          }
+        ]),
+        Expense.aggregate([
+          { $match: expenseMatch },
+          {
+            $group: {
+              _id: { $dateToString: { format: formatString, date: '$expenseDate' } },
+              totalExpense: { $sum: '$amount' }
+            }
+          }
+        ])
+      ]);
+
+      const bucketMap: Record<string, {
+        date: string;
+        inwardQty: number;
+        outwardQty: number;
+        cost: number;
+        revenue: number;
+        expenses: number;
+        profit: number;
+      }> = {};
+
+      purchaseGroup.forEach(g => {
+        const b = g._id;
+        if (b) {
+          if (!bucketMap[b]) {
+            bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+          }
+          bucketMap[b].inwardQty += g.totalQuantity || 0;
+          bucketMap[b].cost += g.totalCost || 0;
+        }
+      });
+
+      salesGroup.forEach(g => {
+        const b = g._id;
+        if (b) {
+          if (!bucketMap[b]) {
+            bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+          }
+          bucketMap[b].outwardQty += g.totalQuantity || 0;
+          bucketMap[b].revenue += g.totalRevenue || 0;
+        }
+      });
+
+      expenseGroup.forEach(g => {
+        const b = g._id;
+        if (b) {
+          if (!bucketMap[b]) {
+            bucketMap[b] = { date: b, inwardQty: 0, outwardQty: 0, cost: 0, revenue: 0, expenses: 0, profit: 0 };
+          }
+          bucketMap[b].expenses += g.totalExpense || 0;
+        }
+      });
+
+      Object.keys(bucketMap).forEach(b => {
+        bucketMap[b].profit = bucketMap[b].revenue - bucketMap[b].cost - bucketMap[b].expenses;
+      });
+
+      const trendData = Object.values(bucketMap).sort((a, b) => a.date.localeCompare(b.date));
+      const pivotData = [...trendData].reverse();
+
+      headers = [
+        'Date/Period',
+        'Inward Eggs Collected (Qty)',
+        'Outward Eggs Sold (Qty)',
+        'Collection Cost (₹)',
+        'Sales Revenue (₹)',
+        'Expenses (₹)',
+        'Net Profit/Loss (₹)'
+      ];
+
+      rows = pivotData.map(r => [
+        r.date,
+        r.inwardQty,
+        r.outwardQty,
+        r.cost,
+        r.revenue,
+        r.expenses,
+        r.profit
       ]);
     } else {
       return res.status(400).json({ success: false, message: 'Invalid report type' });
