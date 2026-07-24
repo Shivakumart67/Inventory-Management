@@ -17,13 +17,16 @@ import {
   Paper,
   CircularProgress,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Collapse
 } from '@mui/material';
 import {
   Download as DownloadIcon,
   FilterList as FilterIcon,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon
+  TrendingDown as TrendingDownIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import {
   ResponsiveContainer,
@@ -70,6 +73,7 @@ export const MISDashboard: React.FC = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [creator, setCreator] = useState<string>('');
+  const [showFiltersMobile, setShowFiltersMobile] = useState<boolean>(false);
 
   // Loaded data state
   const [loading, setLoading] = useState<boolean>(true);
@@ -225,86 +229,215 @@ export const MISDashboard: React.FC = () => {
       </Box>
 
       {/* Filters Card */}
-      <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.04)' }}>
-        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <form onSubmit={handleApplyFilters}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={isAdmin ? 4 : 6} md={3}>
-                <TextField
-                  fullWidth
-                  select
-                  size="small"
-                  label="Date Preset"
-                  value={preset}
-                  onChange={(e) => handlePresetChange(e.target.value)}
-                >
-                  <MenuItem value={PRESET_7_DAYS}>Last 7 Days</MenuItem>
-                  <MenuItem value={PRESET_30_DAYS}>Last 30 Days</MenuItem>
-                  <MenuItem value={PRESET_THIS_MONTH}>Current Month</MenuItem>
-                  <MenuItem value={PRESET_LAST_MONTH}>Last Month</MenuItem>
-                  <MenuItem value={PRESET_OVERALL}>Overall (Lifetime)</MenuItem>
-                  <MenuItem value={PRESET_CUSTOM}>Custom Range</MenuItem>
-                </TextField>
-              </Grid>
+      {isMobile ? (
+        <Box sx={{ mb: 4 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+            startIcon={<FilterIcon />}
+            endIcon={showFiltersMobile ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            sx={{
+              justifyContent: 'space-between',
+              px: 2,
+              py: 1.25,
+              borderRadius: 3,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              color: 'text.primary',
+              '&:hover': {
+                borderColor: 'primary.main',
+                bgcolor: 'background.paper',
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Filters
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {preset === PRESET_CUSTOM
+                  ? `${dayjs(fromDate).format('DD MMM YYYY')} - ${dayjs(toDate).format('DD MMM YYYY')}`
+                  : preset === PRESET_7_DAYS
+                    ? 'Last 7 Days'
+                    : preset === PRESET_30_DAYS
+                      ? 'Last 30 Days'
+                      : preset === PRESET_THIS_MONTH
+                        ? 'Current Month'
+                        : preset === PRESET_LAST_MONTH
+                          ? 'Last Month'
+                          : 'Overall (Lifetime)'
+                }
+                {isAdmin && creator && ` • Manager: ${managers.find((m) => m._id === creator)?.name || 'Filtered'}`}
+              </Typography>
+            </Box>
+          </Button>
 
-              {preset === PRESET_CUSTOM && (
-                <>
-                  <Grid item xs={12} sm={6} md={2.5}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="date"
-                      label="From Date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={2.5}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="date"
-                      label="To Date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                </>
-              )}
+          <Collapse in={showFiltersMobile} sx={{ mt: 1.5 }}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)' }}>
+              <CardContent sx={{ p: 2 }}>
+                <form onSubmit={handleApplyFilters}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        select
+                        size="small"
+                        label="Date Preset"
+                        value={preset}
+                        onChange={(e) => handlePresetChange(e.target.value)}
+                      >
+                        <MenuItem value={PRESET_7_DAYS}>Last 7 Days</MenuItem>
+                        <MenuItem value={PRESET_30_DAYS}>Last 30 Days</MenuItem>
+                        <MenuItem value={PRESET_THIS_MONTH}>Current Month</MenuItem>
+                        <MenuItem value={PRESET_LAST_MONTH}>Last Month</MenuItem>
+                        <MenuItem value={PRESET_OVERALL}>Overall (Lifetime)</MenuItem>
+                        <MenuItem value={PRESET_CUSTOM}>Custom Range</MenuItem>
+                      </TextField>
+                    </Grid>
 
-              {isAdmin && (
-                <Grid item xs={12} sm={preset === PRESET_CUSTOM ? 6 : 4} md={3}>
+                    {preset === PRESET_CUSTOM && (
+                      <>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            type="date"
+                            label="From Date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            type="date"
+                            label="To Date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                      </>
+                    )}
+
+                    {isAdmin && (
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          select
+                          size="small"
+                          label="Filter by Creator"
+                          value={creator}
+                          onChange={(e) => setCreator(e.target.value)}
+                        >
+                          <MenuItem value="">All Managers / System</MenuItem>
+                          {managers.map((m) => (
+                            <MenuItem key={m._id} value={m._id}>
+                              {m.name} (@{m.username})
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                    )}
+
+                    {preset === PRESET_CUSTOM && (
+                      <Grid item xs={12}>
+                        <Button variant="contained" color="primary" type="submit" startIcon={<FilterIcon />} fullWidth>
+                          Apply Filters
+                        </Button>
+                      </Grid>
+                    )}
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+          </Collapse>
+        </Box>
+      ) : (
+        <Card sx={{ mb: 4, borderRadius: 3, boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.04)' }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <form onSubmit={handleApplyFilters}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={isAdmin ? 4 : 6} md={3}>
                   <TextField
                     fullWidth
                     select
                     size="small"
-                    label="Filter by Creator"
-                    value={creator}
-                    onChange={(e) => setCreator(e.target.value)}
+                    label="Date Preset"
+                    value={preset}
+                    onChange={(e) => handlePresetChange(e.target.value)}
                   >
-                    <MenuItem value="">All Managers / System</MenuItem>
-                    {managers.map((m) => (
-                      <MenuItem key={m._id} value={m._id}>
-                        {m.name} (@{m.username})
-                      </MenuItem>
-                    ))}
+                    <MenuItem value={PRESET_7_DAYS}>Last 7 Days</MenuItem>
+                    <MenuItem value={PRESET_30_DAYS}>Last 30 Days</MenuItem>
+                    <MenuItem value={PRESET_THIS_MONTH}>Current Month</MenuItem>
+                    <MenuItem value={PRESET_LAST_MONTH}>Last Month</MenuItem>
+                    <MenuItem value={PRESET_OVERALL}>Overall (Lifetime)</MenuItem>
+                    <MenuItem value={PRESET_CUSTOM}>Custom Range</MenuItem>
                   </TextField>
                 </Grid>
-              )}
 
-              {preset === PRESET_CUSTOM && (
-                <Grid item xs={12} sm={isAdmin ? 6 : 12} md={1.5}>
-                  <Button variant="contained" color="primary" type="submit" startIcon={<FilterIcon />} fullWidth>
-                    Apply
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
+                {preset === PRESET_CUSTOM && (
+                  <>
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="date"
+                        label="From Date"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2.5}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="date"
+                        label="To Date"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                  </>
+                )}
+
+                {isAdmin && (
+                  <Grid item xs={12} sm={preset === PRESET_CUSTOM ? 6 : 4} md={3}>
+                    <TextField
+                      fullWidth
+                      select
+                      size="small"
+                      label="Filter by Creator"
+                      value={creator}
+                      onChange={(e) => setCreator(e.target.value)}
+                    >
+                      <MenuItem value="">All Managers / System</MenuItem>
+                      {managers.map((m) => (
+                        <MenuItem key={m._id} value={m._id}>
+                          {m.name} (@{m.username})
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                )}
+
+                {preset === PRESET_CUSTOM && (
+                  <Grid item xs={12} sm={isAdmin ? 6 : 12} md={1.5}>
+                    <Button variant="contained" color="primary" type="submit" startIcon={<FilterIcon />} fullWidth>
+                      Apply
+                    </Button>
+                  </Grid>
+                )}
+              </Grid>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -314,55 +447,55 @@ export const MISDashboard: React.FC = () => {
         <>
           {/* Glassmorphic KPI Summary Grid */}
           <Grid container spacing={2} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0f766e', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0f766e', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                     Egg Collections
                   </Typography>
-                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0f766e', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0f766e', my: 0.5, fontSize: { xs: '1rem', sm: '1.2rem', md: '1.35rem' } }}>
                     {kpis.totalInwardQty.toLocaleString()} Eggs
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total cost: {formatCurrency(kpis.totalInwardCost, currencySymbol)}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
+                    Cost: {formatCurrency(kpis.totalInwardCost, currencySymbol)}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0ea5e9', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #0ea5e9', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                     Sales Output
                   </Typography>
-                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0ea5e9', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#0ea5e9', my: 0.5, fontSize: { xs: '1rem', sm: '1.2rem', md: '1.35rem' } }}>
                     {kpis.totalOutwardQty.toLocaleString()} Eggs
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Revenue: {formatCurrency(kpis.totalOutwardRevenue, currencySymbol)}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
+                    Rev: {formatCurrency(kpis.totalOutwardRevenue, currencySymbol)}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
-              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #ef4444', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)' }}>
-                <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+            <Grid item xs={6} sm={6} md={3}>
+              <Card sx={{ borderRadius: 3, borderLeft: '5px solid #ef4444', boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', height: '100%' }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                     Other Expenses
                   </Typography>
-                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#ef4444', my: 0.5 }}>
+                  <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 800, color: '#ef4444', my: 0.5, fontSize: { xs: '1rem', sm: '1.2rem', md: '1.35rem' } }}>
                     {formatCurrency(kpis.totalExpenses, currencySymbol)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Operational disbursements
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
+                    Disbursements
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} sm={6} md={3}>
               <Card
                 sx={{
                   borderRadius: 3,
@@ -373,28 +506,31 @@ export const MISDashboard: React.FC = () => {
                   height: '100%'
                 }}
               >
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: { xs: 2, sm: 2.5 } }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                      Net profit / loss
+                <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', boxSizing: 'border-box' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+                      Net Profit
                     </Typography>
+                    {kpis.netProfit >= 0 ? (
+                      <TrendingUpIcon sx={{ fontSize: { xs: 18, sm: 22, md: 26 }, color: 'success.main' }} />
+                    ) : (
+                      <TrendingDownIcon sx={{ fontSize: { xs: 18, sm: 22, md: 26 }, color: 'error.main' }} />
+                    )}
+                  </Box>
+                  <Box sx={{ mt: 0.5 }}>
                     <Typography
-                      variant={isMobile ? "h6" : "h5"}
                       sx={{
                         fontWeight: 900,
                         color: kpis.netProfit >= 0 ? 'success.dark' : 'error.dark',
-                        mt: 0.5
+                        fontSize: { xs: '1rem', sm: '1.2rem', md: '1.35rem' },
+                        lineHeight: 1.2
                       }}
                     >
                       {formatCurrency(kpis.netProfit, currencySymbol)}
                     </Typography>
-                  </Box>
-                  <Box>
-                    {kpis.netProfit >= 0 ? (
-                      <TrendingUpIcon sx={{ fontSize: isMobile ? 36 : 40, color: 'success.main' }} />
-                    ) : (
-                      <TrendingDownIcon sx={{ fontSize: isMobile ? 36 : 40, color: 'error.main' }} />
-                    )}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.7rem', sm: '0.8rem' }, mt: 0.5 }}>
+                      Margin active
+                    </Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -502,14 +638,20 @@ export const MISDashboard: React.FC = () => {
                       </Box>
                     </Grid>
                     <Grid item xs={12} md={5}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: { xs: 1, sm: 2 } }}>
+                      <Box sx={{
+                        display: isMobile ? 'grid' : 'flex',
+                        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'none',
+                        flexDirection: isMobile ? 'none' : 'column',
+                        gap: 1.5,
+                        px: { xs: 1, sm: 2 }
+                      }}>
                         {expenseCategories.map((ec, idx) => (
                           <Box key={ec.name} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: COLORS[idx % COLORS.length], flexShrink: 0 }} />
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{ec.name}</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: COLORS[idx % COLORS.length], flexShrink: 0 }} />
+                              <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>{ec.name}</Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: { xs: '0.8rem', sm: '0.875rem' }, pl: 1 }}>
                               {formatCurrency(ec.value, currencySymbol)}
                             </Typography>
                           </Box>
@@ -527,57 +669,152 @@ export const MISDashboard: React.FC = () => {
             Interactive MIS Summary Ledger
           </Typography>
 
-          <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', overflowX: 'auto' }}>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'grey.50' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Date / Period</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Eggs Collected (Inward)</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Eggs Sold (Outward)</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Collection Cost</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Sales Revenue</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Expenses</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 700 }}>Net Profit/Loss</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {pivotData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        No transactions found for the selected query filters.
-                      </Typography>
-                    </TableCell>
+          {isMobile ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {pivotData.length === 0 ? (
+                <Card sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No transactions found for the selected query filters.
+                  </Typography>
+                </Card>
+              ) : (
+                pivotData.map((row) => {
+                  const isProfit = row.profit >= 0;
+                  return (
+                    <Card
+                      key={row.date}
+                      sx={{
+                        borderRadius: 3,
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderLeft: `5px solid ${isProfit ? '#10b981' : '#ef4444'}`
+                      }}
+                    >
+                      <CardContent sx={{ p: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                            {row.date}
+                          </Typography>
+                          <Box
+                            sx={{
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: 1.5,
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
+                              color: isProfit ? 'success.dark' : 'error.dark',
+                              bgcolor: isProfit ? '#f0fdf4' : '#fef2f2',
+                              border: '1px solid',
+                              borderColor: isProfit ? '#dcfce7' : '#fee2e2'
+                            }}
+                          >
+                            {isProfit ? '+' : ''}{formatCurrency(row.profit, currencySymbol)}
+                          </Box>
+                        </Box>
+                        <Grid container spacing={1.5}>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                              Eggs Collected
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {row.inwardQty.toLocaleString()}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                              Eggs Sold
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {row.outwardQty.toLocaleString()}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                              Collection Cost
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {formatCurrency(row.cost, currencySymbol)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                              Sales Revenue
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                              {formatCurrency(row.revenue, currencySymbol)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, pt: 1, borderTop: '1px dashed', borderColor: 'divider' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                Other Expenses
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, color: 'error.main' }}>
+                                {formatCurrency(row.expenses, currencySymbol)}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.02)', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: 'grey.50' }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Date / Period</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Eggs Collected (Inward)</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Eggs Sold (Outward)</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Collection Cost</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Sales Revenue</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Expenses</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700 }}>Net Profit/Loss</TableCell>
                   </TableRow>
-                ) : (
-                  pivotData.map((row) => (
-                    <TableRow key={row.date} hover>
-                      <TableCell sx={{ fontWeight: 600 }}>{row.date}</TableCell>
-                      <TableCell align="right">{row.inwardQty.toLocaleString()}</TableCell>
-                      <TableCell align="right">{row.outwardQty.toLocaleString()}</TableCell>
-                      <TableCell align="right">{formatCurrency(row.cost, currencySymbol)}</TableCell>
-                      <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600 }}>
-                        {formatCurrency(row.revenue, currencySymbol)}
-                      </TableCell>
-                      <TableCell align="right" sx={{ color: 'error.main' }}>
-                        {formatCurrency(row.expenses, currencySymbol)}
-                      </TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          fontWeight: 700,
-                          color: row.profit >= 0 ? 'success.dark' : 'error.dark',
-                          bgcolor: row.profit >= 0 ? '#f0fdf4' : '#fef2f2'
-                        }}
-                      >
-                        {formatCurrency(row.profit, currencySymbol)}
+                </TableHead>
+                <TableBody>
+                  {pivotData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No transactions found for the selected query filters.
+                        </Typography>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  ) : (
+                    pivotData.map((row) => (
+                      <TableRow key={row.date} hover>
+                        <TableCell sx={{ fontWeight: 600 }}>{row.date}</TableCell>
+                        <TableCell align="right">{row.inwardQty.toLocaleString()}</TableCell>
+                        <TableCell align="right">{row.outwardQty.toLocaleString()}</TableCell>
+                        <TableCell align="right">{formatCurrency(row.cost, currencySymbol)}</TableCell>
+                        <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600 }}>
+                          {formatCurrency(row.revenue, currencySymbol)}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'error.main' }}>
+                          {formatCurrency(row.expenses, currencySymbol)}
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            fontWeight: 700,
+                            color: row.profit >= 0 ? 'success.dark' : 'error.dark',
+                            bgcolor: row.profit >= 0 ? '#f0fdf4' : '#fef2f2'
+                          }}
+                        >
+                          {formatCurrency(row.profit, currencySymbol)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
     </Box>

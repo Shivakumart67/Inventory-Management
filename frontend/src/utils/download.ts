@@ -42,7 +42,7 @@ function showMobileDownloadModal(directUrl: string, filename: string) {
   overlay.style.height = '100vh';
   overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.6)';
   overlay.style.backdropFilter = 'blur(8px)';
-  overlay.style.webkitBackdropFilter = 'blur(8px)';
+  (overlay.style as any).webkitBackdropFilter = 'blur(8px)';
   overlay.style.zIndex = '99999';
   overlay.style.display = 'flex';
   overlay.style.alignItems = 'center';
@@ -124,14 +124,14 @@ function showMobileDownloadModal(directUrl: string, filename: string) {
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  const btnOpen = card.querySelector('#btn-open-browser');
+  const btnOpen = card.querySelector('#btn-open-browser') as HTMLElement | null;
   if (btnOpen) {
     btnOpen.addEventListener('click', () => {
       setTimeout(closeModal, 1500);
     });
   }
 
-  const btnCopy = card.querySelector('#btn-copy-link');
+  const btnCopy = card.querySelector('#btn-copy-link') as HTMLElement | null;
   if (btnCopy) {
     btnCopy.addEventListener('click', () => {
       navigator.clipboard.writeText(directUrl)
@@ -153,7 +153,7 @@ function showMobileDownloadModal(directUrl: string, filename: string) {
     });
   }
 
-  const btnCancel = card.querySelector('#btn-cancel');
+  const btnCancel = card.querySelector('#btn-cancel') as HTMLElement | null;
   if (btnCancel) {
     btnCancel.addEventListener('click', closeModal);
   }
