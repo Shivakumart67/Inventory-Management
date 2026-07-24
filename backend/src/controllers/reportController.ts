@@ -176,6 +176,56 @@ export const getStockReport = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
+export const getComprehensiveReport = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { fromDate, toDate, user } = req.query;
+    const start = fromDate ? dayjs(fromDate as string).startOf('day') : dayjs().subtract(30, 'day').startOf('day');
+    const end = toDate ? dayjs(toDate as string).endOf('day') : dayjs().endOf('day');
+
+    const startDate = start.toDate();
+    const endDate = end.toDate();
+
+    let creatorFilter: any = {};
+    if (req.user?.role === 'MANAGER') {
+      creatorFilter = { createdBy: req.user._id };
+    } else if (user) {
+      creatorFilter = { createdBy: new mongoose.Types.ObjectId(user as string) };
+    }
+
+    const [purchases, sales, expenses, stockSummary] = await Promise.all([
+      Purchase.find({ purchaseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }),
+      Sale.find({ salesDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }),
+      Expense.find({ expenseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }),
+      StockSummary.findOne()
+    ]);
+
+    const totalInwardQty = purchases.reduce((sum, p) => sum + p.quantity, 0);
+    const totalInwardCost = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalOutwardQty = sales.reduce((sum, s) => sum + s.quantity, 0);
+    const totalOutwardRevenue = sales.reduce((sum, s) => sum + s.totalSaleAmount, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const netProfit = totalOutwardRevenue - totalInwardCost - totalExpenses;
+
+    return res.status(200).json({
+      success: true,
+      summary: {
+        totalInwardQty,
+        totalInwardCost,
+        totalOutwardQty,
+        totalOutwardRevenue,
+        totalExpenses,
+        netProfit,
+        currentStock: stockSummary?.currentStock || 0,
+      },
+      purchasesCount: purchases.length,
+      salesCount: sales.length,
+      expensesCount: expenses.length
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ==========================================
 // EXPORT GENERATION TRIGGERS
 // ==========================================
@@ -395,6 +445,41 @@ export const triggerExport = async (req: AuthRequest, res: Response, next: NextF
         r.expenses,
         r.profit
       ]);
+    } else if (type === 'comprehensive') {
+      reportName = 'comprehensive_audit_report';
+      const start = fromDate ? dayjs(fromDate as string).startOf('day') : dayjs().subtract(30, 'day').startOf('day');
+      const end = toDate ? dayjs(toDate as string).endOf('day') : dayjs().endOf('day');
+
+      const startDate = start.toDate();
+      const endDate = end.toDate();
+
+      let creatorFilter: any = {};
+      if (req.user?.role === 'MANAGER') {
+        creatorFilter = { createdBy: req.user._id };
+      } else if (user) {
+        creatorFilter = { createdBy: new mongoose.Types.ObjectId(user as string) };
+      }
+
+      // Fetch all logs within period
+      const [purchases, sales, expenses, stockLedger, stockSummary] = await Promise.all([
+        Purchase.find({ purchaseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }).populate('createdBy', 'name').sort({ purchaseDate: 1 }),
+        Sale.find({ salesDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }).populate('createdBy', 'name').sort({ salesDate: 1 }),
+        Expense.find({ expenseDate: { $gte: startDate, $lte: endDate }, ...creatorFilter }).populate('createdBy', 'name').sort({ expenseDate: 1 }),
+        StockLedger.find({ date: { $gte: startDate, $lte: endDate } }).populate('createdBy', 'name').sort({ date: 1 }),
+        StockSummary.findOne()
+      ]);
+
+      await ExportService.exportComprehensiveExcel({
+        startDate,
+        endDate,
+        purchases,
+        sales,
+        expenses,
+        stockLedger,
+        currentStock: stockSummary?.currentStock || 0,
+        res
+      });
+      return;
     } else {
       return res.status(400).json({ success: false, message: 'Invalid report type' });
     }

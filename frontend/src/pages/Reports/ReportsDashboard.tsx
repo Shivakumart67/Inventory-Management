@@ -190,6 +190,25 @@ export const ReportsDashboard: React.FC = () => {
       );
     }
 
+    if (reportType === 'comprehensive') {
+      return (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <SummaryTile title="Collected (Inward)" value={`${summary.totalInwardQty?.toLocaleString()} Eggs (${currencySymbol}${summary.totalInwardCost?.toLocaleString()})`} color="primary" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <SummaryTile title="Sold (Outward)" value={`${summary.totalOutwardQty?.toLocaleString()} Eggs (${currencySymbol}${summary.totalOutwardRevenue?.toLocaleString()})`} color="success" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <SummaryTile title="Total Expenses" value={`${currencySymbol}${summary.totalExpenses?.toLocaleString()}`} color="error" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <SummaryTile title="Net Audit Profit" value={`${currencySymbol}${summary.netProfit?.toLocaleString()}`} color="info" />
+          </Grid>
+        </Grid>
+      );
+    }
+
     return null;
   };
 
@@ -228,6 +247,7 @@ export const ReportsDashboard: React.FC = () => {
                   <MenuItem value="sales">Sales Report (Stock Outward)</MenuItem>
                   <MenuItem value="expenses">Expense Report</MenuItem>
                   <MenuItem value="stock">Stock Movement Ledger</MenuItem>
+                  <MenuItem value="comprehensive">Detailed Audit Report (Coming Soon)</MenuItem>
                 </TextField>
             </Grid>
           </Grid>
@@ -326,7 +346,7 @@ export const ReportsDashboard: React.FC = () => {
                     color="secondary"
                     startIcon={<ExcelIcon />}
                     onClick={() => handleExport('excel')}
-                    disabled={loading || (!reportData?.items && !reportData?.ledgerItems)}
+                    disabled={loading || (!reportData?.items && !reportData?.ledgerItems && !reportData?.summary)}
                   >
                     Export Excel
                   </Button>
@@ -335,7 +355,7 @@ export const ReportsDashboard: React.FC = () => {
                     color="secondary"
                     startIcon={<CsvIcon />}
                     onClick={() => handleExport('csv')}
-                    disabled={loading || (!reportData?.items && !reportData?.ledgerItems)}
+                    disabled={loading || reportType === 'comprehensive' || (!reportData?.items && !reportData?.ledgerItems)}
                   >
                     Export CSV
                   </Button>
@@ -525,6 +545,64 @@ export const ReportsDashboard: React.FC = () => {
                   </TableBody>
                 </>
               )}
+
+              {/* COMPREHENSIVE HEADERS */}
+              {reportType === 'comprehensive' && (
+                <>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700 }}>Key Performance Indicator (KPI)</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 700 }}>Periodic Metrics / Vol</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 700 }}>Financial Value</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Auditing Comments</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 600 }}>Inward Egg Collections</TableCell>
+                      <TableCell align="right">{reportData.summary.totalInwardQty?.toLocaleString()} Eggs</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600 }}>{currencySymbol}{reportData.summary.totalInwardCost?.toLocaleString()}</TableCell>
+                      <TableCell>Cumulative logs count: {reportData.purchasesCount} collections</TableCell>
+                    </TableRow>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 600 }}>Outward Egg Sales</TableCell>
+                      <TableCell align="right">{reportData.summary.totalOutwardQty?.toLocaleString()} Eggs</TableCell>
+                      <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600 }}>{currencySymbol}{reportData.summary.totalOutwardRevenue?.toLocaleString()}</TableCell>
+                      <TableCell>Cumulative logs count: {reportData.salesCount} invoices</TableCell>
+                    </TableRow>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 600 }}>Unit Production Cost</TableCell>
+                      <TableCell align="right">1 Unit</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600 }}>{currencySymbol}{(reportData.summary.totalInwardQty > 0 ? (reportData.summary.totalInwardCost / reportData.summary.totalInwardQty) : 0).toFixed(2)}</TableCell>
+                      <TableCell>Average gathering cost per egg unit</TableCell>
+                    </TableRow>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 600 }}>Unit Selling Price</TableCell>
+                      <TableCell align="right">1 Unit</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600 }}>{currencySymbol}{(reportData.summary.totalOutwardQty > 0 ? (reportData.summary.totalOutwardRevenue / reportData.summary.totalOutwardQty) : 0).toFixed(2)}</TableCell>
+                      <TableCell>Average market sale price per egg unit</TableCell>
+                    </TableRow>
+                    <TableRow hover>
+                      <TableCell sx={{ fontWeight: 600 }}>Other Expenses</TableCell>
+                      <TableCell align="right">—</TableCell>
+                      <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600 }}>{currencySymbol}{reportData.summary.totalExpenses?.toLocaleString()}</TableCell>
+                      <TableCell>Cumulative operational expenses count: {reportData.expensesCount} vouchers</TableCell>
+                    </TableRow>
+                    <TableRow
+                      hover
+                      sx={{
+                        bgcolor: reportData.summary.netProfit >= 0 ? '#f0fdf4' : '#fef2f2',
+                        '& td': { fontWeight: 700 }
+                      }}
+                    >
+                      <TableCell sx={{ color: reportData.summary.netProfit >= 0 ? 'success.dark' : 'error.dark' }}>Net Business Profit</TableCell>
+                      <TableCell align="right">Current Stock: {reportData.summary.currentStock?.toLocaleString()} Eggs</TableCell>
+                      <TableCell align="right" sx={{ color: reportData.summary.netProfit >= 0 ? 'success.dark' : 'error.dark' }}>{currencySymbol}{reportData.summary.netProfit?.toLocaleString()}</TableCell>
+                      <TableCell sx={{ fontStyle: 'italic' }}>Net surplus margin yields: {(reportData.summary.totalOutwardRevenue > 0 ? ((reportData.summary.netProfit / reportData.summary.totalOutwardRevenue) * 100) : 0).toFixed(1)}%</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </>
+              )}
             </Table>
           </Box>
         </Card>
@@ -599,6 +677,43 @@ export const ReportsDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             )) : <Card sx={{ p: 3, textAlign: 'center' }}><Typography color="text.secondary">No stock ledger logs matching criteria</Typography></Card>
+          )}
+
+          {reportType === 'comprehensive' && (
+            <Card sx={{ mb: 1.5 }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main', mb: 1.5 }}>Reconciliation Ledger Metrics</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Inward Collections Qty</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{reportData.summary.totalInwardQty?.toLocaleString()} Eggs</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Inward Value</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{currencySymbol}{reportData.summary.totalInwardCost?.toLocaleString()}</Typography>
+                  </Box>
+                  <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Outward Sales Qty</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{reportData.summary.totalOutwardQty?.toLocaleString()} Eggs</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Outward Revenue</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>{currencySymbol}{reportData.summary.totalOutwardRevenue?.toLocaleString()}</Typography>
+                  </Box>
+                  <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Operational Expenses</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>{currencySymbol}{reportData.summary.totalExpenses?.toLocaleString()}</Typography>
+                  </Box>
+                  <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: reportData.summary.netProfit >= 0 ? 'success.dark' : 'error.dark' }}>Net Audit Profit</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, color: reportData.summary.netProfit >= 0 ? 'success.dark' : 'error.dark' }}>{currencySymbol}{reportData.summary.netProfit?.toLocaleString()}</Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           )}
         </Box>
         </>

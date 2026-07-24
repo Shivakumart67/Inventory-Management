@@ -46,6 +46,7 @@ import {
   getSalesReport,
   getExpenseReport,
   getStockReport,
+  getComprehensiveReport,
   triggerExport
 } from '../controllers/reportController';
 import { getActivityLogs } from '../controllers/activityController';
@@ -129,6 +130,7 @@ router.get('/reports/purchases', authenticateJWT as any, getPurchaseReport as an
 router.get('/reports/sales', authenticateJWT as any, getSalesReport as any);
 router.get('/reports/expenses', authenticateJWT as any, getExpenseReport as any);
 router.get('/reports/stock', authenticateJWT as any, getStockReport as any);
+router.get('/reports/comprehensive', authenticateJWT as any, getComprehensiveReport as any);
 router.get('/reports/export', authenticateJWT as any, triggerExport as any);
 
 // ==========================================
